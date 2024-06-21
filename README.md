@@ -4,4 +4,4 @@
 
 Consists of Chrome Extension bootstraped with Vite.JS running ReactJS and TailwindCSS
 
-More documentation coming soon!
+More documentation coming soon!!
