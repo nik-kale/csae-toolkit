@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import UserGuide from './UserGuide';
+import StorageManager from './StorageManager';
 
-function App() {
+const App = () => {
   const [showGuide, setShowGuide] = useState(false);
+  const [showStorageManager, setShowStorageManager] = useState(false);
+
 
   const toggleHover = () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
