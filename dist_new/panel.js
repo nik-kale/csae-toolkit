@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const storageDataDiv = document.getElementById('storageData');
 
   loadButton.addEventListener('click', () => {
+
     async function fetchStorageData() {
       const code = `
         (async function() {

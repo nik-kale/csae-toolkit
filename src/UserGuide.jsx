@@ -52,6 +52,22 @@ const UserGuide = () => {
           </ul>
         </li>
       </ol>
+      <h2 className="text-lg font-semibold mt-4">Storage Manager</h2>
+      <ol className="list-decimal list-inside ml-4 mb-4">
+        <li>Click the <strong>Show Storage Manager</strong> button to open the storage manager interface.</li>
+        <li>Select the storage area you want to inspect (Local or Session) from the dropdown menu.</li>
+        <li>Click the <strong>Load Storage Data</strong> button to view the current storage data for the selected area.</li>
+        <li>Click the <strong>Clear Storage Data</strong> button to clear the current storage data for the selected area.</li>
+        <li>Click the <strong>Load Cookies</strong> button to view the current cookies for the domain.</li>
+        <li>Click the <strong>Clear Cookies</strong> button to clear the current cookies for the domain.</li>
+      </ol>
+      <h2 className="text-lg font-semibold mt-4">Examples</h2>
+      <ul className="list-disc list-inside ml-4">
+        <li>You can use this extension to clear your session to render CSRF useless.</li>
+        <li>You can use this extension to clear first party tracking cookies.</li>
+        <li>You can use this extension to clear your cache to prevent cache fingerprinting.</li>
+        <li>You can use this extension to clear localStorage and IndexedDB to help prevent evercookies.</li>
+      </ul>
     </div>
   );
 };

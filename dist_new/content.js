@@ -442,8 +442,7 @@ if (!window.modalInitialized) {
     }
   `;
 
-
-    // Inject the modal HTML and CSS into the page
+  // Inject the modal HTML and CSS into the page
   document.body.insertAdjacentHTML('beforeend', modalHTML);
   const style = document.createElement('style');
   style.textContent = modalCSS;

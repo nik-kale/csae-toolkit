@@ -2,13 +2,16 @@
   "manifest_version": 3,
   "name": "CSAE Toolkit",
   "description": "This extension complements the Cisco Support Assistant Extension (CSAE) and offers purpose-built tools to aid in campaign creation.",
-  "version": "1.2.2",
+  "version": "1.2.0",
   "permissions": [
     "activeTab",
     "scripting",
     "storage",
     "tabs",
     "cookies"
+  ],
+  "host_permissions": [
+    "*://*/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -29,7 +32,7 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "*://*/*"
       ],
       "js": [
         "content.js"

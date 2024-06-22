@@ -1,5 +1,6 @@
 {
-  "name": "shepherd-css-selector",
+  "name": "csae-toolkit",
+  "author": "Nik Kale",
   "private": true,
   "version": "0.0.0",
   "type": "module",

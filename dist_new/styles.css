@@ -1,0 +1,28 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #282a36;
+  color: #f8f8f2;
+  padding: 10px;
+}
+
+button {
+  background-color: #6272a4;
+  color: #f8f8f2;
+  border: none;
+  padding: 10px;
+  margin-right: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:hover {
+  background-color: #44475a;
+}
+
+pre {
+  background-color: #44475a;
+  padding: 10px;
+  border-radius: 5px;
+  overflow: auto;
+  max-height: 500px;
+}
