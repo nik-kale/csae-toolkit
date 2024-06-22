@@ -304,3 +304,167 @@ function showCopiedNotification() {
     }, 500);
   }, 2000);
 }
+
+
+// Check if modal already exists to avoid duplicate declarations
+if (!window.modalInitialized) {
+  // Create and inject modal HTML
+  const modalHTML = `
+    <div id="myModal" class="fixed inset-0 flex items-center justify-center z-50" style="display: none;">
+      <div class="bg-gray-800 rounded-lg shadow-md p-6 text-white w-3/4 max-w-2xl">
+        <h2 class="text-2xl font-semibold mb-4" style="color: #649ef5;">Steps to Retrieve and View CSAE Config Stored on Your Browser</h2>
+        <ol class="list-decimal list-inside ml-4 mb-4">
+          <li class="mb-2 text-white">Open the Extension:
+            <ul class="list-disc list-inside ml-4">
+              <li class="text-white">Click on the Cisco Support Assistant Extension icon in your Chrome browser to open it.</li>
+            </ul>
+          </li>
+          <li class="mb-2 text-white">Inspect the Extension:
+            <ul class="list-disc list-inside ml-4">
+              <li class="text-white">Right-click on the opened extension window.</li>
+              <li class="text-white">Select "Inspect" from the context menu. This action opens the Chrome Developer Tools (DevTools) for that extension.</li>
+            </ul>
+          </li>
+          <li class="mb-2 text-white">Navigate to the CSAE Toolkit CE Storage Panel:
+            <ul class="list-disc list-inside ml-4">
+              <li class="text-white">In the DevTools, look for a panel labeled "CSAE Toolkit CE Storage". This might be among the tabs at the top or accessible via the "&gt;&gt;" button if there are many tabs.</li>
+            </ul>
+          </li>
+          <li class="mb-2 text-white">Load the CSAE Config:
+            <ul class="list-disc list-inside ml-4">
+              <li class="text-white">Inside the "CSAE Toolkit CE Storage" panel, you will find two buttons.</li>
+              <li class="text-white">Click on the button labeled to load the storage, typically named something like "Load Storage". This action will retrieve the CSAE configuration for your browser from the extension's storage.</li>
+            </ul>
+          </li>
+        </ol>
+        <button id="closeModal" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 mt-4 font-semibold">Close</button>
+      </div>
+    </div>
+  `;
+
+  const modalCSS = `
+    .fixed {
+      position: fixed;
+    }
+    .inset-0 {
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+    .flex {
+      display: flex;
+    }
+    .items-center {
+      align-items: center;
+    }
+    .justify-center {
+      justify-content: center;
+    }
+    .z-50 {
+      z-index: 50;
+    }
+    .bg-gray-800 {
+      background-color: #2d3748;
+    }
+    .rounded-lg {
+      border-radius: 0.5rem;
+    }
+    .shadow-md {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .p-6 {
+      padding: 1.6rem;
+      font-weight: 400;
+    }
+    .text-white {
+      color: white;
+    }
+    .w-3/4 {
+      width: 75%;
+    }
+    .max-w-2xl {
+      max-width: 600px;
+    }
+    .text-2xl {
+      font-size: 1.8rem;
+    }
+    .font-semibold {
+      font-weight: 600;
+    }
+    .mb-4 {
+      margin-bottom: 1rem;
+    }
+    .list-decimal {
+      list-style-type: decimal;
+    }
+    .list-inside {
+      list-style-position: inside;
+    }
+    .ml-4 {
+      margin-left: 1rem;
+    }
+    .mb-2 {
+      margin-bottom: 0.5rem;
+    }
+    .list-disc {
+      list-style-type: disc;
+    }
+    .px-4 {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    .py-2 {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    .bg-blue-500 {
+      background-color: #4299e1;
+    }
+    .rounded {
+      border-radius: 0.25rem;
+    }
+    .hover\\:bg-blue-600:hover {
+      background-color: #3182ce;
+    }
+    .transition {
+      transition: all 0.2s ease-in-out;
+    }
+    .duration-300 {
+      transition-duration: 300ms;
+    }
+    .mt-4 {
+      margin-top: 1rem;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    body, button, h2, li {
+      font-family: 'Inter', Arial, sans-serif;
+    }
+  `;
+
+  // Inject the modal HTML and CSS into the page
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  const style = document.createElement('style');
+  style.textContent = modalCSS;
+  document.head.appendChild(style);
+
+  // Add event listener to close the modal
+  document.getElementById('closeModal').addEventListener('click', () => {
+    document.getElementById('myModal').style.display = 'none';
+  });
+
+  // Function to show the modal
+  function showModal() {
+    document.getElementById('myModal').style.display = 'flex';
+  }
+
+  // Listen for messages to show the modal
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'viewConfig') {
+      showModal();
+    }
+  });
+
+  // Mark the modal as initialized
+  window.modalInitialized = true;
+}

@@ -3,57 +3,98 @@ document.addEventListener('DOMContentLoaded', function() {
   const clearButton = document.getElementById('clearStorage');
   const storageDataDiv = document.getElementById('storageData');
 
-  loadButton.addEventListener('click', async () => {
-    try {
-      const result = await new Promise((resolve, reject) => {
-        chrome.devtools.inspectedWindow.eval(
-          "new Promise((resolve) => { chrome.storage.local.get(null, (items) => { resolve(items); }); })",
-          (result, isException) => {
-            if (isException) {
-              reject(isException);
-            } else {
-              resolve(result);
-            }
-          }
-        );
-      });
+  loadButton.addEventListener('click', () => {
 
-      if (result === undefined || result === null) {
-        throw new Error('No result returned');
-      } else {
-        console.log('Loaded storage data:', result);
-        storageDataDiv.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
-      }
-    } catch (error) {
-      console.error('Failed to load storage data:', error);
-      storageDataDiv.innerHTML = '<p>Error: Failed to load storage data.</p>';
+    async function fetchStorageData() {
+      const code = `
+        (async function() {
+          try {
+            //console.log('Evaluating chrome.storage.local.get');
+            const result = await new Promise((resolve, reject) => {
+              chrome.storage.local.get(null, function(items) {
+                if (chrome.runtime.lastError) {
+                  console.error('chrome.runtime.lastError:', chrome.runtime.lastError.message);
+                  reject(chrome.runtime.lastError.message);
+                } else {
+                  //console.log('Items retrieved:', items);
+                  resolve(items);
+                }
+              });
+            });
+            console.clear();
+            console.log('CSAE Config retrieved from CSAE cloud and used on this browser:', result);
+            return JSON.stringify({ data: result });
+          } catch (error) {
+            console.error('Error getting storage items:', error);
+            return JSON.stringify({ error: error.toString() });
+          }
+        })()
+      `;
+
+      chrome.devtools.inspectedWindow.eval(code, (result, isException) => {
+        if (isException) {
+          console.error('Failed to load storage data:', isException);
+          storageDataDiv.innerHTML = '<p>Error: Failed to load storage data.</p>';
+        } else {
+          console.log('Loaded storage data:', result);
+          if (result) {
+            storageDataDiv.innerHTML = `<pre>Check the Console tab for results</pre>`;
+          } else {
+            storageDataDiv.innerHTML = '<p>No storage data found.</p>';
+          }
+        }
+      });
     }
+
+    // Call the function to execute the logic
+    fetchStorageData();
+
+
   });
 
-  clearButton.addEventListener('click', async () => {
-    try {
-      const result = await new Promise((resolve, reject) => {
-        chrome.devtools.inspectedWindow.eval(
-          "new Promise((resolve) => { chrome.storage.local.clear(() => { resolve('Storage cleared'); }); })",
-          (result, isException) => {
-            if (isException) {
-              reject(isException);
+  clearButton.addEventListener('click', () => {
+    chrome.devtools.inspectedWindow.eval(
+      `(async function() {
+        try {
+          console.log('Evaluating chrome.storage.local.clear');
+          await new Promise((resolve, reject) => {
+            chrome.storage.local.clear(function() {
+              if (chrome.runtime.lastError) {
+                console.error('chrome.runtime.lastError:', chrome.runtime.lastError.message);
+                reject(chrome.runtime.lastError.message);
+              } else {
+                console.log('Storage cleared successfully');
+                resolve();
+              }
+            });
+          });
+          return JSON.stringify({ success: true });
+        } catch (error) {
+          console.error('Error clearing storage:', error);
+          return JSON.stringify({ error: error.toString() });
+        }
+      })()`,
+      (result, isException) => {
+        console.log('Evaluated script result:', result);
+        if (isException) {
+          console.error('Failed to clear storage data:', isException);
+          storageDataDiv.innerHTML = '<p>Error: Failed to clear storage data.</p>';
+        } else {
+          try {
+            const parsedResult = JSON.parse(result);
+            if (parsedResult.error) {
+              console.error('Failed to clear storage data:', parsedResult.error);
+              storageDataDiv.innerHTML = `<p>Error: ${parsedResult.error}</p>`;
             } else {
-              resolve(result);
+              console.log('Storage cleared');
+              storageDataDiv.innerHTML = '<p>Storage cleared.</p>';
             }
+          } catch (e) {
+            console.error('Failed to parse clear storage data:', e);
+            storageDataDiv.innerHTML = '<p>Error: Failed to parse clear storage data.</p>';
           }
-        );
-      });
-
-      if (result === undefined || result === null) {
-        throw new Error('No result returned');
-      } else {
-        console.log(result);
-        storageDataDiv.innerHTML = '<p>Storage cleared.</p>';
+        }
       }
-    } catch (error) {
-      console.error('Failed to clear storage data:', error);
-      storageDataDiv.innerHTML = '<p>Error: Failed to clear storage data.</p>';
-    }
+    );
   });
 });
