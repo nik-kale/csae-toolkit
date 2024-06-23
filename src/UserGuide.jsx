@@ -10,7 +10,7 @@ const UserGuide = () => {
         <li className="text-sm">Click on the extension icon to open the popup window.</li>
         <li className="text-sm">Click the <strong>Grab CSS Selector</strong> button to start the hover functionality.</li>
         <li className="text-sm">Hover over any element on the page to see its CSS selector and value in real-time.</li>
-        <li className="text-sm">Click on an element to grab its CSS selector and value. The CSS selector will be copied to the cli className="text-sm"pboard with all spaces removed.</li>
+        <li className="text-sm">Click on an element to grab its CSS selector and value. The CSS selector will be copied to the clipboard with all spaces removed.</li>
         <li className="text-sm">Press the <strong>ESC</strong> key to stop the hover functionality.</li>
         <li className="text-sm">To restart the hover & capture functionality, click the <strong>Grab CSS Selector</strong> button again.</li>
         <li className="text-sm">Use <strong>ALT + Click</strong> on an element to pin the hover box for that element. You can pin multiple hover boxes using this method.</li>
@@ -28,7 +28,7 @@ const UserGuide = () => {
       </ul>
       <h2 className="text-lg font-semibold mt-4">Retrieve and View CSAE Config</h2>
       <ol className="list-decimal list-inside ml-4 mb-4">
-        <li  className="mb-2 text-sm">Open the Extension:
+        <li className="mb-2 text-sm">Open the Extension:
           <ul className="list-disc list-inside ml-4">
             <li className="text-sm">Click on the Cisco Support Assistant Extension icon in your Chrome browser to open it.</li>
           </ul>
@@ -59,6 +59,12 @@ const UserGuide = () => {
         <li className="text-sm">Click the <strong>Clear Storage Data</strong> button to clear the current storage data for the selected area.</li>
         <li className="text-sm">Click the <strong>Load Cookies</strong> button to view the current cookies for the domain.</li>
         <li className="text-sm">Click the <strong>Clear Cookies</strong> button to clear the current cookies for the domain.</li>
+      </ol>
+      <h2 className="text-lg font-semibold mt-4">Color Picker</h2>
+      <ol className="list-decimal list-inside ml-4 mb-4">
+        <li className="text-sm">Click the <strong>Utilize Color Picker</strong> button to activate the color picker tool.</li>
+        <li className="text-sm">Select a color from anywhere on the screen.</li>
+        <li className="text-sm">The selected color code will be copied to your clipboard and a notification will appear.</li>
       </ol>
       <h2 className="text-lg font-semibold mt-4">Examples</h2>
       <ul className="list-disc list-inside ml-4">
