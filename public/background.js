@@ -1,3 +1,10 @@
+chrome.runtime.onInstalled.addListener(async function () {
+  chrome.sidePanel
+    .setPanelBehavior({ openPanelOnActionClick: true })
+    .catch((error) => console.error(error));
+});
+
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus?.removeAll(() => {
     console.log("All context menus have been removed.");

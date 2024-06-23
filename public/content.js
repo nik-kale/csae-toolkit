@@ -1,3 +1,4 @@
+// SECTION 1: HOVER BOX TO SHOW ELEMENT SELECTOR AND VALUE
 if (!window.hoverBox) {
   window.hoverBox = document.createElement('div');
   window.hoverBox.style.position = 'fixed';
@@ -44,6 +45,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       document.removeEventListener('mouseout', mouseOutHandler);
       document.removeEventListener('click', clickHandler);
     }
+    sendResponse({ status: "success" });
+  }
+
+  if (message.action === 'pickColor') {
+    pickColorHandler();
     sendResponse({ status: "success" });
   }
 });
@@ -285,7 +291,7 @@ function showCopiedNotification() {
   notification.style.color = '#4ADC71';
   notification.style.padding = '10px 20px';
   notification.style.borderRadius = '8px';
-  notification.style.fontFamily = 'Arial, sans-serif';  // Fallback to Arial
+  notification.style.fontFamily = 'Inter, Arial, sans-serif';  // Fallback to Arial
   notification.style.fontSize = '14px';  // Updated font size
   notification.style.fontWeight = 'bold';  // Make the text bold
   notification.style.display = 'flex';
@@ -305,8 +311,7 @@ function showCopiedNotification() {
   }, 2000);
 }
 
-
-// Check if modal already exists to avoid duplicate declarations
+// SECTION 2: MODAL WINDOW TO SHOW MESSAGE INTRUCTIONS FOR VIEWING CSAE CONFIG
 if (!window.modalInitialized) {
   // Create and inject modal HTML
   const modalHTML = `
@@ -316,7 +321,7 @@ if (!window.modalInitialized) {
         <ol class="list-decimal list-inside ml-4 mb-4">
           <li class="mb-2 text-white">Open the Extension:
             <ul class="list-disc list-inside ml-4">
-              <li class="text-white">Click on the Cisco Support Assistant Extension icon in your Chrome browser to open it.</li>
+              <li class="text-white">Click on the Cisco Support Assistant Extension icon in your Chrome browser to open the extension window.</li>
             </ul>
           </li>
           <li class="mb-2 text-white">Inspect the Extension:
@@ -442,7 +447,6 @@ if (!window.modalInitialized) {
     }
   `;
 
-
     // Inject the modal HTML and CSS into the page
   document.body.insertAdjacentHTML('beforeend', modalHTML);
   const style = document.createElement('style');
@@ -468,4 +472,89 @@ if (!window.modalInitialized) {
 
   // Mark the modal as initialized
   window.modalInitialized = true;
+}
+
+
+// SECION 3: COLOR PICKER FUNCTIONALITY
+function pickColorHandler() {
+  if ('EyeDropper' in window) {
+    const eyeDropper = new window.EyeDropper();
+    eyeDropper.open().then(result => {
+      console.log('Color picked:', result.sRGBHex); // Log the picked color
+
+      // Try using the Clipboard API first
+      navigator.clipboard.writeText(result.sRGBHex).then(() => {
+        console.log('Color copied to clipboard:', result.sRGBHex); // Log successful copy
+        showColorCopiedNotification(`Color ${result.sRGBHex} copied to clipboard!`);
+      }).catch(() => {
+        // Fallback to document.execCommand('copy')
+        fallbackCopyTextToClipboard(result.sRGBHex);
+      });
+    }).catch(() => {
+      showColorCopiedNotification('Failed to pick color');
+    });
+  } else {
+    showColorCopiedNotification('EyeDropper API not supported');
+  }
+}
+
+function fallbackCopyTextToClipboard(text) {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed'; // Avoid scrolling to bottom
+  textArea.style.opacity = '0';
+  textArea.style.left = '-9999px';
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+
+  try {
+    const successful = document.execCommand('copy');
+    const msg = successful ? 'successful' : 'unsuccessful';
+    console.log('Fallback: Copying text command was ' + msg);
+    showColorCopiedNotification(`Color ${text} copied to clipboard!`);
+  } catch (err) {
+    console.error('Fallback: Oops, unable to copy');
+    showColorCopiedNotification('Failed to copy color');
+  }
+
+  document.body.removeChild(textArea);
+}
+
+
+
+function showColorCopiedNotification(message) {
+  // Remove any existing notification
+  let existingNotification = document.querySelector('.copied-notification');
+  if (existingNotification) {
+    existingNotification.remove();
+    clearTimeout(window.notificationTimeout);
+  }
+
+  const notification = document.createElement('div');
+  notification.className = 'copied-notification';
+  notification.style.position = 'fixed';
+  notification.style.top = '20px';
+  notification.style.right = '20px';
+  notification.style.zIndex = '10001';  // Ensure the notification is on top
+  notification.style.backgroundColor = '#23282e';
+  notification.style.color = '#4ADC71';
+  notification.style.padding = '10px 20px';
+  notification.style.borderRadius = '8px';
+  notification.style.fontFamily = 'Inter, Arial, sans-serif';  // Fallback to Arial
+  notification.style.fontSize = '14px';  // Updated font size
+  notification.style.fontWeight = 'bold';  // Make the text bold
+  notification.style.display = 'flex';
+  notification.style.alignItems = 'center';
+  notification.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="#4ADC71" viewBox="0 0 24 24" width="24px" height="24px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M9 16.17l-4.17-4.17-1.41 1.41L9 19 20.59 7.41l-1.41-1.41z"/></svg><span style="margin-left: 10px;">${message}</span>`;
+
+  document.body.appendChild(notification);
+
+  window.notificationTimeout = setTimeout(() => {
+    notification.style.transition = 'opacity 0.5s';
+    notification.style.opacity = '0';
+    setTimeout(() => {
+      notification.remove();
+    }, 500);
+  }, 2000);
 }

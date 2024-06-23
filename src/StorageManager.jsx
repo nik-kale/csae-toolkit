@@ -130,12 +130,12 @@ const StorageManager = () => {
     <div className="p-4 bg-[#464b54] rounded-lg shadow-md mt-4 text-white">
       <h2 className="text-lg font-semibold mb-4">Storage Manager</h2>
       <div className="mb-4">
-        <label htmlFor="storageArea" className="block mb-2">Select Storage Area:</label>
+        <label htmlFor="storageArea" className="block mb-2 text-sm">Select Storage Area:</label>
         <select
           id="storageArea"
           value={selectedArea}
           onChange={(e) => setSelectedArea(e.target.value)}
-          className="p-2 bg-gray-700 text-white rounded"
+          className="p-2 bg-gray-700 text-white rounded text-sm"
         >
           <option value="local">Local</option>
           <option value="session">Session</option>
@@ -143,14 +143,14 @@ const StorageManager = () => {
       </div>
       <div className="mb-4">
         <button
-          className="px-4 py-2 bg-[#649ef5] text-white rounded hover:bg-blue-600 transition duration-300"
+          className="px-4 py-2 bg-[#649ef5] text-white text-sm rounded hover:bg-blue-600 transition duration-300"
           onClick={loadSelectedStorage}
           disabled={loading}
         >
           {loading ? 'Loading...' : 'Load Storage Data'}
         </button>
         <button
-          className="px-4 py-2 bg-[#44696d] text-white rounded hover:bg-red-600 transition duration-300 ml-2"
+          className="px-4 py-2 bg-[#44696d] text-white text-sm rounded hover:bg-red-600 transition duration-300 ml-2"
           onClick={clearSelectedStorage}
           disabled={loading}
         >
@@ -158,20 +158,20 @@ const StorageManager = () => {
         </button>
       </div>
       {error && (
-        <div className="bg-red-500 text-white p-2 rounded mb-4">
+        <div className="bg-red-500 text-white text-sm p-2 rounded mb-4">
           <p>Error: {error}</p>
         </div>
       )}
       {(selectedArea === 'local' && localStorageData) && (
         <div>
           <h3 className="text-lg font-semibold mb-2">Local Storage Data:</h3>
-          <pre className="text-sm bg-gray-800 p-4 rounded text-wrap overflow-x-auto whitespace-pre-wrap">{JSON.stringify(localStorageData, null, 2)}</pre>
+          <pre className="text-sm font-semibold  bg-gray-800 p-4 rounded text-wrap overflow-x-auto whitespace-pre-wrap">{JSON.stringify(localStorageData, null, 2)}</pre>
         </div>
       )}
       {(selectedArea === 'session' && sessionStorageData) && (
         <div>
           <h3 className="text-lg font-semibold mb-2">Session Storage Data:</h3>
-          <pre className="text-sm bg-gray-800 p-4 rounded text-wrap overflow-x-auto whitespace-pre-wrap">{JSON.stringify(sessionStorageData, null, 2)}</pre>
+          <pre className="text-sm font-semibold  bg-gray-800 p-4 rounded text-wrap overflow-x-auto whitespace-pre-wrap">{JSON.stringify(sessionStorageData, null, 2)}</pre>
         </div>
       )}
       <div className="mt-4">
@@ -181,7 +181,7 @@ const StorageManager = () => {
         {cookiesData && (
           <div>
             <h3 className="text-lg font-semibold mb-2 mt-4">Cookies Data:</h3>
-            <pre className="text-sm bg-gray-800 p-4 rounded text-wrap overflow-x-auto whitespace-pre-wrap">{JSON.stringify(cookiesData, null, 2)}</pre>
+            <pre className="text-sm font-semibold  bg-gray-800 p-4 rounded text-wrap overflow-x-auto whitespace-pre-wrap">{JSON.stringify(cookiesData, null, 2)}</pre>
           </div>
         )}
       </div>
