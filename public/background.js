@@ -4,7 +4,6 @@ chrome.runtime.onInstalled.addListener(async function () {
     .catch((error) => console.error(error));
 });
 
-
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus?.removeAll(() => {
     console.log("All context menus have been removed.");
@@ -27,3 +26,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Keeps the message channel open for sendResponse
   }
 });
+

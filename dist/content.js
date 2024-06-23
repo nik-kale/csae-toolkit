@@ -521,8 +521,6 @@ function fallbackCopyTextToClipboard(text) {
   document.body.removeChild(textArea);
 }
 
-
-
 function showColorCopiedNotification(message) {
   // Remove any existing notification
   let existingNotification = document.querySelector('.copied-notification');
@@ -558,3 +556,13 @@ function showColorCopiedNotification(message) {
     }, 500);
   }, 2000);
 }
+
+// SECTION 4: STORAGE VIEWER RETURNED RESULTS
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'storageData') {
+    console.log('Received storage data from DevTools panel:', message.data);
+    // Handle the received data as needed
+    alert('Received storage data from DevTools panel. Check the console for details.');
+    sendResponse({ status: 'success' });
+  }
+});

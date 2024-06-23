@@ -30,7 +30,7 @@ const UserGuide = () => {
       <ol className="list-decimal list-inside ml-4 mb-4">
         <li className="mb-2 text-sm">Open the Extension:
           <ul className="list-disc list-inside ml-4">
-            <li className="text-sm">Click on the Cisco Support Assistant Extension icon in your Chrome browser to open it.</li>
+            <li className="text-sm">Click on the Cisco Support Assistant Extension icon in your Chrome browser to open the extension.</li>
           </ul>
         </li>
         <li className="mb-2 text-sm">Inspect the Extension:

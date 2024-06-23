@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
               });
             });
             console.clear();
-            console.log('CSAE Config retrieved from CSAE cloud and used on this browser:', result);
+            console.log('CSAE Config on this browser:', result);
             return JSON.stringify({ data: result });
           } catch (error) {
             console.error('Error getting storage items:', error);
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           console.log('Loaded storage data:', result);
           if (result) {
-            storageDataDiv.innerHTML = `<pre>Check the Console tab for results</pre>`;
+            storageDataDiv.innerHTML = `<pre>Check the Console tab for results.</pre>`;
           } else {
             storageDataDiv.innerHTML = '<p>No storage data found.</p>';
           }
