@@ -79,19 +79,8 @@ document.addEventListener('DOMContentLoaded', function() {
           console.error('Failed to clear storage data:', isException);
           storageDataDiv.innerHTML = '<p>Error: Failed to clear storage data.</p>';
         } else {
-          try {
-            const parsedResult = JSON.parse(result);
-            if (parsedResult.error) {
-              console.error('Failed to clear storage data:', parsedResult.error);
-              storageDataDiv.innerHTML = `<p>Error: ${parsedResult.error}</p>`;
-            } else {
-              console.log('Storage cleared');
+            console.log('Storage cleared');
               storageDataDiv.innerHTML = '<p>Storage cleared.</p>';
-            }
-          } catch (e) {
-            console.error('Failed to parse clear storage data:', e);
-            storageDataDiv.innerHTML = '<p>Error: Failed to parse clear storage data.</p>';
-          }
         }
       }
     );
