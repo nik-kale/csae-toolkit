@@ -1,17 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>CSAE Toolkit Chrome Extension Storage</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSAE Toolkit CE Storage Inspector</title>
   <link rel="stylesheet" href="panel.css">
-  <script src="panel.js" type="module" defer></script>
 </head>
 <body>
-  <div id="app">
-    <h2>CSAE Toolkit's Chrome Extension Storage Inspector</h2>
+  <h2>CSAE Toolkit's Chrome Extension Storage Inspector</h2>
     <p>Use the buttons below to view the CSAE configuration in your browser or to clear the stored config on your browser. You can then sign back in again on Cisco Support Assistant Extension (CSAE) to prompt the chrome extension (CE) to make a new request to fetch the updated configuration from the CSAE cloud.</p>
+  <div class="button-container">
     <button id="loadStorage">Load Storage Data</button>
     <button id="clearStorage">Clear Storage Data</button>
-    <div id="storageData"></div>
   </div>
+  <br />
+  <div id="jsoneditor"></div>
+  <script src="panel.js" type="module" defer></script>
 </body>
 </html>

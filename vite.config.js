@@ -9,8 +9,7 @@ export default defineConfig({
       targets: [
         { src: 'src/devtools.js', dest: '' },
         { src: 'src/panel.js', dest: '' },
-        { src: 'public/styles.css', dest: '' },
-        { src: 'src/devtools.js', dest: '' },
+        { src: 'public/styles.css', dest: '' }
       ]
     })
   ],
@@ -22,7 +21,7 @@ export default defineConfig({
         panel: 'public/panel.html',
         sidepanel: 'index.html'
       },
-      external: ['devtools.js', 'panel.js'] // Externalize these modules
+      external: ['devtools.js', 'panel.js']
     }
   }
 });

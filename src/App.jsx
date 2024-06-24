@@ -134,7 +134,8 @@ const App = () => {
         {showGuide && <UserGuide />}
         {showStorageManager && <StorageManager />}
         <br />
-        <h4 className="text-center text-sm font-semibold">© 2024-2025 Cisco Systems Inc. Created by Nik Kale. </h4>
+        <h4 className="text-center text-sm font-semibold mt-8 mb-2">Made with ☕ and ❤️ by Nik Kale</h4>
+        <h4 className="text-center text-sm font-semibold my-4">© 2024-2025 Cisco Systems Inc.</h4>
       </div>
     </div>
   );

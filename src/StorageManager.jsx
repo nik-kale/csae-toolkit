@@ -176,8 +176,8 @@ const StorageManager = () => {
       )}
       <div className="mt-4">
         <h2 className="text-lg font-semibold">Cookies</h2>
-        <button onClick={loadCookies} className="px-4 py-2 bg-[#649ef5] text-white rounded hover:bg-blue-600 transition duration-300">Load Cookies</button>
-        <button onClick={clearCookies} className="px-4 py-2 bg-[#44696d] text-white rounded hover:bg-red-600 transition duration-300 ml-2">Clear Cookies</button>
+        <button onClick={loadCookies} className="px-4 py-2 bg-[#649ef5] text-white text-sm rounded hover:bg-blue-600 transition duration-300">Load Cookies</button>
+        <button onClick={clearCookies} className="px-4 py-2 bg-[#44696d] text-white text-sm rounded hover:bg-red-600 transition duration-300 ml-2">Clear Cookies</button>
         {cookiesData && (
           <div>
             <h3 className="text-lg font-semibold mb-2 mt-4">Cookies Data:</h3>
