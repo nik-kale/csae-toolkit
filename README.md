@@ -1,6 +1,6 @@
-# CSAE Toolkit v3.0 🛠️
+# CSAE Toolkit v4.0 🛠️
 
-**Professional Developer & Designer Toolkit with 22+ Tools**
+**Enterprise Edition - Professional Developer & Designer Toolkit with 22+ Tools**
 
 Created by Nik Kale (nikkal) | © 2024-2025 Cisco Systems Inc.
 
@@ -13,6 +13,19 @@ CSAE Toolkit is a powerful Chrome Extension that complements the Cisco Support A
 **Tech Stack:** React 18.3.1, Vite 5.2.0, TailwindCSS 3.4.4
 **License:** MIT
 **Manifest:** V3 (Modern Chrome Extension Standard)
+
+### 🚀 What's New in v4.0 Enterprise Edition
+
+- **🎨 Light/Dark Theme Toggle** - Choose your preferred theme or use auto (system preference)
+- **↩️ Undo/Redo System** - Full history tracking with Ctrl+Z/Ctrl+Shift+Z shortcuts
+- **⭐ Favorites & Recent Tools** - Star your favorites and quick access to recent tools
+- **🔍 Tool Search (Ctrl+K)** - Instant search across all 22 tools
+- **🎯 Floating Quick Access Button** - Draggable quick access to favorite tools
+- **🎓 Interactive Onboarding** - First-time user guide with 5-step tutorial
+- **⚙️ Settings & Preferences** - Comprehensive settings with export/import
+- **🛡️ Security Hardening** - XSS protection, sanitization, rate limiting, audit logging
+- **⚡ Performance Optimizations** - Debouncing, throttling, memoization, lazy loading
+- **🧩 Error Boundaries** - Graceful error handling with recovery options
 
 ---
 
@@ -54,6 +67,7 @@ CSAE Toolkit is a powerful Chrome Extension that complements the Cisco Support A
 
 ## ⌨️ Keyboard Shortcuts
 
+### Tool Shortcuts
 | Shortcut | Action |
 |----------|--------|
 | `Ctrl+Shift+C` | CSS Selector Grabber |
@@ -62,7 +76,15 @@ CSAE Toolkit is a powerful Chrome Extension that complements the Cisco Support A
 | `Ctrl+Shift+G` | Grid Overlay |
 | `Ctrl+Shift+O` | Element Outliner |
 | `Ctrl+Shift+S` | Screenshot |
-| `ESC` | Exit any active tool |
+
+### v4.0 Enterprise Shortcuts
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+K` | Open Tool Search |
+| `Ctrl+,` | Open Settings |
+| `Ctrl+Z` | Undo Last Action |
+| `Ctrl+Shift+Z` | Redo Action |
+| `ESC` | Exit/Close any active tool or modal |
 
 *Note: Use `Cmd` instead of `Ctrl` on macOS*
 
@@ -252,8 +274,14 @@ All permissions are used exclusively for the stated tool functionality. No data 
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
-**Current Version:** 3.0.0
-**Previous Versions:** 1.2.6, 1.2.0, 1.1.0, 1.0.0
+**Current Version:** 4.0.0 (Enterprise Edition)
+**Previous Versions:** 3.0.0, 1.2.6, 1.2.0, 1.1.0, 1.0.0
+
+### Major Milestones
+- **v4.0.0** (Nov 2025) - Enterprise Edition with theme toggle, undo/redo, tool search, favorites, security hardening
+- **v3.0.0** (Jan 2025) - Feature parity with SuperDev Pro, 22 professional tools, keyboard shortcuts
+- **v1.2.6** (Dec 2024) - CSAE Config integration, storage management
+- **v1.0.0** (Sep 2024) - Initial release with core tools
 
 ---
 

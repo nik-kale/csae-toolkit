@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "CSAE Toolkit",
-  "description": "Professional developer and designer toolkit with 18+ tools for web inspection, editing, and debugging. Complements the Cisco Support Assistant Extension (CSAE).",
-  "version": "3.0.0",
+  "description": "Enterprise Edition v4.0 - Professional developer toolkit with 22+ tools, theme toggle, undo/redo, favorites, tool search, and advanced features for web development.",
+  "version": "4.0.0",
   "permissions": [
     "activeTab",
     "scripting",

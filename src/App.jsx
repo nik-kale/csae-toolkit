@@ -3,12 +3,23 @@ import UserGuide from './UserGuide';
 import StorageManager from './StorageManager';
 import IndexedDBManager from './IndexedDBManager';
 import DateTime from './DateTime';
+import Settings from './Settings';
+import Onboarding from './components/Onboarding';
+import ToolSearch from './components/ToolSearch';
+import FloatingButton from './components/FloatingButton';
+import { ThemeToggle } from './utils/theme';
+import { toolHistoryManager } from './utils/toolHistory';
+import undoRedoManager from './utils/undoRedo';
 
 const App = () => {
   const [showGuide, setShowGuide] = useState(false);
   const [showStorageManager, setShowStorageManager] = useState(false);
   const [showIndexedDBManager, setShowIndexedDBManager] = useState(false);
   const [activeSection, setActiveSection] = useState('main');
+  const [showSettings, setShowSettings] = useState(false);
+  const [showToolSearch, setShowToolSearch] = useState(false);
+  const [showFloatingButton, setShowFloatingButton] = useState(true);
+  const [undoRedoState, setUndoRedoState] = useState({ canUndo: false, canRedo: false });
 
   useEffect(() => {
     if (window.chrome && chrome.devtools) {
@@ -24,9 +35,47 @@ const App = () => {
         }
       );
     }
+
+    // Subscribe to undo/redo state changes
+    const undoRedoListener = (state) => {
+      setUndoRedoState(state);
+    };
+    undoRedoManager.addListener(undoRedoListener);
+
+    // Load floating button preference
+    chrome.storage.local.get(['showFloatingButton'], (result) => {
+      if (result.showFloatingButton !== undefined) {
+        setShowFloatingButton(result.showFloatingButton);
+      }
+    });
+
+    // Global keyboard shortcuts
+    const handleGlobalShortcuts = (e) => {
+      // Ctrl+K or Cmd+K for tool search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowToolSearch(true);
+      }
+      // Ctrl+, or Cmd+, for settings
+      if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+        e.preventDefault();
+        setShowSettings(true);
+      }
+    };
+    document.addEventListener('keydown', handleGlobalShortcuts);
+
+    return () => {
+      undoRedoManager.removeListener(undoRedoListener);
+      document.removeEventListener('keydown', handleGlobalShortcuts);
+    };
   }, []);
 
-  const executeAction = (action, mode = null) => {
+  const executeAction = (action, mode = null, toolInfo = null) => {
+    // Record tool usage if tool info provided
+    if (toolInfo) {
+      toolHistoryManager.recordToolUsage(toolInfo);
+    }
+
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs.length === 0) {
         console.error('No active tab found');
@@ -64,6 +113,43 @@ const App = () => {
         }
       );
     });
+  };
+
+  const handleToolSelect = (tool) => {
+    // Map tool ID to action
+    const actionMap = {
+      'css-selector': 'toggleHover',
+      'color-picker': 'pickColor',
+      'color-palette': 'viewColorPalette',
+      'measure-elements': 'measureElement',
+      'seo-inspector': 'seoInspector',
+      'extract-images': 'extractImages',
+      'export-element': 'exportElement',
+      'performance-metrics': 'performanceMetrics',
+      'live-css-editor': 'liveCSSEditor',
+      'edit-text': 'editElement',
+      'delete-element': { action: 'manipulateElement', mode: 'delete' },
+      'hide-element': { action: 'manipulateElement', mode: 'hide' },
+      'duplicate-element': { action: 'manipulateElement', mode: 'duplicate' },
+      'highlight-element': 'highlightElement',
+      'change-font': 'changeFont',
+      'grid-overlay': 'toggleGrid',
+      'outline-elements': 'outlineElements',
+      'screenshot': 'takeScreenshot',
+      'responsive-tester': 'responsiveTester',
+      'storage-manager': () => setShowStorageManager(true),
+      'indexeddb-manager': () => setShowIndexedDBManager(true),
+      'view-config': 'viewConfig',
+    };
+
+    const mapping = actionMap[tool.id];
+    if (typeof mapping === 'function') {
+      mapping();
+    } else if (typeof mapping === 'object') {
+      executeAction(mapping.action, mapping.mode, tool);
+    } else if (mapping) {
+      executeAction(mapping, null, tool);
+    }
   };
 
   const navigateToURL = (url) => {
@@ -185,27 +271,100 @@ const App = () => {
   };
 
   return (
-    <div className="App p-4 bg-[#23282e] text-white shadow-lg w-full h-screen overflow-y-auto" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-      <div className="max-w-96 mx-auto">
-        <h1 className="text-3xl font-bold mb-2 text-center">
-          CSAE Toolkit v3.0
-        </h1>
-        <p className="text-center text-sm text-gray-400 mb-4">
-          Professional Developer & Designer Tools
-        </p>
-        <DateTime />
-        <img src="background.png" alt="background" className="w-96 h-76 mx-auto mb-4" />
+    <>
+      <div className="App p-4 bg-[#23282e] text-white shadow-lg w-full h-screen overflow-y-auto" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+        <div className="max-w-96 mx-auto">
+          {/* Header with v4.0 controls */}
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold">
+              CSAE Toolkit v4.0
+            </h1>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowToolSearch(true)}
+                className="p-2 rounded bg-[#353945] hover:bg-[#464b54] transition duration-300"
+                title="Search tools (Ctrl+K)"
+                aria-label="Search tools"
+              >
+                🔍
+              </button>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-2 rounded bg-[#353945] hover:bg-[#464b54] transition duration-300"
+                title="Settings (Ctrl+,)"
+                aria-label="Settings"
+              >
+                ⚙️
+              </button>
+            </div>
+          </div>
 
-        {renderSection()}
+          <p className="text-center text-sm text-gray-400 mb-2">
+            Enterprise Edition - Professional Tools
+          </p>
 
-        <br />
-        <div className="text-center text-xs text-gray-400 mt-8">
-          <p className="font-semibold">Made with ☕ and ❤️ by Nik Kale</p>
-          <p className="mt-1">© 2024-2025 Cisco Systems Inc.</p>
-          <p className="mt-2 text-[#4ADC71] font-bold">✨ 22 Professional Tools + Keyboard Shortcuts ✨</p>
+          {/* Theme Toggle */}
+          <div className="mb-4">
+            <ThemeToggle />
+          </div>
+
+          {/* Undo/Redo Indicator */}
+          {(undoRedoState.canUndo || undoRedoState.canRedo) && (
+            <div className="mb-3 p-2 bg-[#353945] rounded text-xs flex items-center justify-between">
+              <span className="text-gray-400">History: {undoRedoState.historyLength || 0} actions</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => undoRedoManager.undo()}
+                  disabled={!undoRedoState.canUndo}
+                  className={`px-2 py-1 rounded ${undoRedoState.canUndo ? 'bg-[#649ef5] hover:bg-[#5080d0]' : 'bg-gray-700 cursor-not-allowed'}`}
+                  title="Undo (Ctrl+Z)"
+                >
+                  ↩️ Undo
+                </button>
+                <button
+                  onClick={() => undoRedoManager.redo()}
+                  disabled={!undoRedoState.canRedo}
+                  className={`px-2 py-1 rounded ${undoRedoState.canRedo ? 'bg-[#649ef5] hover:bg-[#5080d0]' : 'bg-gray-700 cursor-not-allowed'}`}
+                  title="Redo (Ctrl+Shift+Z)"
+                >
+                  ↪️ Redo
+                </button>
+              </div>
+            </div>
+          )}
+
+          <DateTime />
+          <img src="background.png" alt="background" className="w-96 h-76 mx-auto mb-4" />
+
+          {renderSection()}
+
+          <br />
+          <div className="text-center text-xs text-gray-400 mt-8">
+            <p className="font-semibold">Made with ☕ and ❤️ by Nik Kale</p>
+            <p className="mt-1">© 2024-2025 Cisco Systems Inc.</p>
+            <p className="mt-2 text-[#4ADC71] font-bold">✨ v4.0 Enterprise Edition - 22+ Professional Tools ✨</p>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* v4.0 Overlays and Components */}
+      {showToolSearch && (
+        <ToolSearch
+          onToolSelect={handleToolSelect}
+          onClose={() => setShowToolSearch(false)}
+        />
+      )}
+
+      {showSettings && (
+        <Settings onClose={() => setShowSettings(false)} />
+      )}
+
+      {showFloatingButton && (
+        <FloatingButton onToolSelect={handleToolSelect} />
+      )}
+
+      <Onboarding onComplete={() => console.log('Onboarding completed')} />
+    </>
   );
 };
 
