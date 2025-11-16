@@ -1,153 +1,98 @@
-// SECTION 1: HOVER BOX TO SHOW ELEMENT SELECTOR AND VALUE
+// ===================================
+// CSAE TOOLKIT V3.0 - CONTENT SCRIPT
+// ===================================
+
+// Global state management
+if (typeof window.csaeToolkit === 'undefined') {
+  window.csaeToolkit = {
+    hoverActive: false,
+    currentTarget: null,
+    pinnedHoverBoxes: [],
+    notificationTimeout: null,
+    rulerActive: false,
+    gridActive: false,
+    editMode: false,
+    colorPalette: [],
+    measurementStart: null,
+    measurementBox: null,
+  };
+}
+
+// Initialize hover box
 if (!window.hoverBox) {
   window.hoverBox = document.createElement('div');
-  window.hoverBox.style.position = 'fixed';
-  window.hoverBox.style.zIndex = '10000';
-  window.hoverBox.style.backgroundColor = '#282A33';  // Updated background color
-  window.hoverBox.style.color = 'white';
-  window.hoverBox.style.padding = '10px';
-  window.hoverBox.style.borderRadius = '8px';  // Slightly rounded corners
-  window.hoverBox.style.pointerEvents = 'none';
-  window.hoverBox.style.display = 'none';
-  window.hoverBox.style.fontFamily = 'Arial, sans-serif';  // Fallback to Arial
-  window.hoverBox.style.fontSize = '14px';  // Updated font size
-  window.hoverBox.style.lineHeight = '1.5';
-  window.hoverBox.style.maxWidth = '600px';  // Increased max-width for two columns
+  window.hoverBox.style.cssText = `
+    position: fixed;
+    z-index: 10000;
+    background-color: #282A33;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    pointer-events: none;
+    display: none;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 600px;
+  `;
   document.body.appendChild(window.hoverBox);
 }
 
-if (typeof window.hoverActive === 'undefined') {
-  window.hoverActive = false;
-}
-
-if (typeof window.notificationTimeout === 'undefined') {
-  window.notificationTimeout = null;
-}
-
-if (typeof window.pinnedHoverBoxes === 'undefined') {
-  window.pinnedHoverBoxes = [];
-}
-
-if (typeof window.currentTarget === 'undefined') {
-  window.currentTarget = null;
-}
-
+// ===================================
+// MESSAGE LISTENER
+// ===================================
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'toggleHover') {
-    window.hoverActive = message.hoverActive;
-    if (window.hoverActive) {
-      document.addEventListener('mousemove', mouseMoveHandler);
-      document.addEventListener('mouseout', mouseOutHandler, { once: true });
-      document.addEventListener('click', clickHandler, { once: true });
-    } else {
-      window.hoverBox.style.display = 'none';
-      document.removeEventListener('mousemove', mouseMoveHandler);
-      document.removeEventListener('mouseout', mouseOutHandler);
-      document.removeEventListener('click', clickHandler);
-    }
-    sendResponse({ status: "success" });
-  }
-
-  if (message.action === 'pickColor') {
-    pickColorHandler();
-    sendResponse({ status: "success" });
-  }
-});
-
-function mouseMoveHandler(event) {
-  if (!window.hoverActive) return;
-
-  // Check if hovering over a pinned hover box
-  for (let hoverBox of window.pinnedHoverBoxes) {
-    if (hoverBox.contains(event.target)) {
-      window.hoverBox.style.display = 'none';
-      return;
-    }
-  }
-
-  window.hoverBox.style.left = `${event.clientX + 10}px`;
-  window.hoverBox.style.top = `${event.clientY + 10}px`;
-}
-
-function mouseOutHandler(event) {
-  if (window.currentTarget) {
-    window.currentTarget.style.outline = '';
-    window.currentTarget = null;
-  }
-  window.hoverBox.style.display = 'none';
-}
-
-function clickHandler(event) {
-  if (!window.hoverActive) return;
-
-  event.preventDefault();
-  event.stopPropagation();
-
-  let target = event.target;
-  let path = getUniqueSelector(target);
-  path = path.replace(/\s+/g, '');  // Remove all spaces from the selector
-
-  if (event.altKey) {
-    pinHoverBox(target, path);
-  } else {
-    // Hide hover box
-    window.hoverBox.style.display = 'none';
-
-    // Copy to clipboard
-    navigator.clipboard.writeText(path).then(() => {
-      showCopiedNotification();
-    }).catch(err => {
-      console.error('Failed to copy: ', err);
-    });
-
-    chrome.runtime.sendMessage({ selector: path, value: getElementValue(target) });
-  }
-
-  return false;
-}
-
-function pinHoverBox(target, path) {
-  const hoverBoxClone = window.hoverBox.cloneNode(true);
-  hoverBoxClone.style.pointerEvents = 'auto';
-  hoverBoxClone.style.position = 'absolute';
-  hoverBoxClone.style.left = `${target.getBoundingClientRect().left + window.scrollX}px`;
-  hoverBoxClone.style.top = `${target.getBoundingClientRect().top + window.scrollY}px`;
-  hoverBoxClone.style.zIndex = '10001';  // Ensure pinned hover box is on top
-
-  const closeButton = document.createElement('button');
-  closeButton.textContent = 'x';
-  closeButton.style.position = 'absolute';
-  closeButton.style.top = '5px';
-  closeButton.style.right = '5px';
-  closeButton.style.background = 'transparent';
-  closeButton.style.border = 'none';
-  closeButton.style.color = 'white';
-  closeButton.style.fontSize = '16px';
-  closeButton.style.cursor = 'pointer';
-  closeButton.onclick = () => {
-    hoverBoxClone.remove();
-    window.pinnedHoverBoxes = window.pinnedHoverBoxes.filter(box => box !== hoverBoxClone);
+  const actions = {
+    toggleHover: () => handleToggleHover(message),
+    pickColor: () => handleColorPicker(),
+    viewConfig: () => showConfigModal(),
+    takeScreenshot: () => handleScreenshot(),
+    measureElement: () => handleMeasurement(),
+    toggleGrid: () => handleToggleGrid(),
+    extractImages: () => handleImageExtractor(),
+    seoInspector: () => handleSEOInspector(),
+    editElement: () => handleElementEditor(),
+    manipulateElement: () => handleElementManipulator(message.mode),
+    exportElement: () => handleElementExport(),
+    changeFont: () => handleFontChanger(),
+    clearCache: () => handleCacheClear(),
   };
 
-  hoverBoxClone.appendChild(closeButton);
-  document.body.appendChild(hoverBoxClone);
-  window.pinnedHoverBoxes.push(hoverBoxClone);
+  if (actions[message.action]) {
+    actions[message.action]();
+    sendResponse({ status: 'success' });
+  }
+
+  if (message.type === 'storageData') {
+    console.log('Received storage data from DevTools panel:', message.data);
+    alert('Received storage data from DevTools panel. Check the console for details.');
+    sendResponse({ status: 'success' });
+  }
+
+  return true;
+});
+
+// ===================================
+// CSS SELECTOR GRABBER
+// ===================================
+function handleToggleHover(message) {
+  window.csaeToolkit.hoverActive = message.hoverActive;
+
+  if (window.csaeToolkit.hoverActive) {
+    document.addEventListener('mouseover', mouseOverHandler, true);
+    document.addEventListener('mousemove', mouseMoveHandler);
+    document.addEventListener('click', clickHandler, { once: true });
+  } else {
+    clearAllHoverBoxes();
+    removeHoverListeners();
+  }
 }
 
-function clearAllHoverBoxes() {
-  window.hoverBox.style.display = 'none';
-  window.pinnedHoverBoxes.forEach(box => box.remove());
-  window.pinnedHoverBoxes = [];
-  document.querySelectorAll('*').forEach(element => {
-    element.style.outline = '';
-  });
-}
-
-document.addEventListener('mouseover', function(event) {
-  if (!window.hoverActive) return;
+function mouseOverHandler(event) {
+  if (!window.csaeToolkit.hoverActive) return;
 
   // Check if hovering over a pinned hover box
-  for (let hoverBox of window.pinnedHoverBoxes) {
+  for (let hoverBox of window.csaeToolkit.pinnedHoverBoxes) {
     if (hoverBox.contains(event.target)) {
       window.hoverBox.style.display = 'none';
       return;
@@ -155,10 +100,10 @@ document.addEventListener('mouseover', function(event) {
   }
 
   let target = event.target;
-  if (window.currentTarget) {
-    window.currentTarget.style.outline = '';
+  if (window.csaeToolkit.currentTarget) {
+    window.csaeToolkit.currentTarget.style.outline = '';
   }
-  window.currentTarget = target;
+  window.csaeToolkit.currentTarget = target;
   target.style.outline = '2px solid red';
 
   let path = getUniqueSelector(target);
@@ -186,136 +131,602 @@ document.addEventListener('mouseover', function(event) {
   // Add close button
   const closeButton = document.createElement('button');
   closeButton.textContent = 'x';
-  closeButton.style.position = 'absolute';
-  closeButton.style.top = '5px';
-  closeButton.style.right = '5px';
-  closeButton.style.background = 'transparent';
-  closeButton.style.border = 'none';
-  closeButton.style.color = 'white';
-  closeButton.style.fontSize = '16px';
-  closeButton.style.cursor = 'pointer';
+  closeButton.style.cssText = `
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+  `;
   closeButton.onclick = () => {
     window.hoverBox.style.display = 'none';
-    window.currentTarget.style.outline = '';
-    window.currentTarget = null;
+    if (window.csaeToolkit.currentTarget) {
+      window.csaeToolkit.currentTarget.style.outline = '';
+      window.csaeToolkit.currentTarget = null;
+    }
   };
 
   window.hoverBox.appendChild(closeButton);
-
   window.hoverBox.style.display = 'block';
+}
+
+function mouseMoveHandler(event) {
+  if (!window.csaeToolkit.hoverActive) return;
+
+  for (let hoverBox of window.csaeToolkit.pinnedHoverBoxes) {
+    if (hoverBox.contains(event.target)) {
+      window.hoverBox.style.display = 'none';
+      return;
+    }
+  }
+
   window.hoverBox.style.left = `${event.clientX + 10}px`;
   window.hoverBox.style.top = `${event.clientY + 10}px`;
+}
 
-  document.addEventListener('mousemove', mouseMoveHandler);
-  document.addEventListener('mouseout', mouseOutHandler, { once: true });
+function clickHandler(event) {
+  if (!window.csaeToolkit.hoverActive) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  let target = event.target;
+  let path = getUniqueSelector(target).replace(/\s+/g, '');
+
+  if (event.altKey) {
+    pinHoverBox(target, path);
+  } else {
+    window.hoverBox.style.display = 'none';
+    navigator.clipboard.writeText(path).then(() => {
+      showNotification('Selector copied to clipboard!');
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+      showNotification('Failed to copy selector', 'error');
+    });
+
+    chrome.runtime.sendMessage({ selector: path, value: getElementValue(target) });
+  }
+
+  // Re-attach click listener for next click
   document.addEventListener('click', clickHandler, { once: true });
-}, true);
 
+  return false;
+}
+
+function pinHoverBox(target, path) {
+  const hoverBoxClone = window.hoverBox.cloneNode(true);
+  hoverBoxClone.style.pointerEvents = 'auto';
+  hoverBoxClone.style.position = 'absolute';
+  hoverBoxClone.style.left = `${target.getBoundingClientRect().left + window.scrollX}px`;
+  hoverBoxClone.style.top = `${target.getBoundingClientRect().top + window.scrollY}px`;
+  hoverBoxClone.style.zIndex = '10001';
+
+  const closeButton = document.createElement('button');
+  closeButton.textContent = 'x';
+  closeButton.style.cssText = `
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+  `;
+  closeButton.onclick = () => {
+    hoverBoxClone.remove();
+    window.csaeToolkit.pinnedHoverBoxes = window.csaeToolkit.pinnedHoverBoxes.filter(box => box !== hoverBoxClone);
+  };
+
+  hoverBoxClone.appendChild(closeButton);
+  document.body.appendChild(hoverBoxClone);
+  window.csaeToolkit.pinnedHoverBoxes.push(hoverBoxClone);
+}
+
+function clearAllHoverBoxes() {
+  window.hoverBox.style.display = 'none';
+  window.csaeToolkit.pinnedHoverBoxes.forEach(box => box.remove());
+  window.csaeToolkit.pinnedHoverBoxes = [];
+  document.querySelectorAll('*').forEach(element => {
+    element.style.outline = '';
+  });
+}
+
+function removeHoverListeners() {
+  document.removeEventListener('mouseover', mouseOverHandler, true);
+  document.removeEventListener('mousemove', mouseMoveHandler);
+  document.removeEventListener('click', clickHandler);
+}
+
+// ESC key to deactivate
 document.addEventListener('keydown', function(event) {
   if (event.key === 'Escape') {
-    window.hoverActive = false;
+    window.csaeToolkit.hoverActive = false;
     clearAllHoverBoxes();
-    document.removeEventListener('mousemove', mouseMoveHandler);
-    document.removeEventListener('mouseout', mouseOutHandler);
-    document.removeEventListener('click', clickHandler);
+    removeHoverListeners();
+    removeGrid();
+    removeMeasurement();
   }
 });
 
-function getUniqueSelector(el) {
-  if (!(el instanceof Element)) return '';
-  let path = [];
+// ===================================
+// COLOR PICKER
+// ===================================
+function handleColorPicker() {
+  if ('EyeDropper' in window) {
+    const eyeDropper = new window.EyeDropper();
+    eyeDropper.open().then(result => {
+      const color = result.sRGBHex;
 
-  while (el && el.nodeType === Node.ELEMENT_NODE) {
-    let selector = el.nodeName.toLowerCase();
-    if (el.id) {
-      selector = `#${el.id}`;
-      path.unshift(selector);
-      break;
-    } else if (typeof el.className === 'string' && el.className.trim()) {
-      let classes = el.className.trim().split(/\s+/).join('.');
-      if (classes) {
-        selector += `.${classes}`;
+      // Add to color palette
+      if (!window.csaeToolkit.colorPalette.includes(color)) {
+        window.csaeToolkit.colorPalette.push(color);
+        chrome.storage.local.set({ colorPalette: window.csaeToolkit.colorPalette });
       }
-    }
-    let sib = el;
-    let nth = 1;
-    while (sib = sib.previousElementSibling) {
-      if (sib.nodeName.toLowerCase() === selector) nth++;
-    }
-    if (nth !== 1) {
-      selector += `:nth-of-type(${nth})`;
-    }
-    path.unshift(selector);
-    el = el.parentNode;
-  }
 
-  // Remove leading elements until a unique identifier is found
-  while (path.length > 1 && !path[0].includes('#') && !path[0].includes('.')) {
-    path.shift();
-  }
-
-  return path.join(' > ');
-}
-
-function getElementValue(el) {
-  if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-    return el.value;
+      navigator.clipboard.writeText(color).then(() => {
+        showNotification(`Color ${color} copied to clipboard!`);
+      }).catch(() => {
+        fallbackCopyTextToClipboard(color);
+      });
+    }).catch(() => {
+      showNotification('Failed to pick color', 'error');
+    });
   } else {
-    return el.textContent.trim();
+    showNotification('EyeDropper API not supported', 'error');
   }
 }
 
-function getCSSProperties(el) {
-  const computedStyle = window.getComputedStyle(el);
-  const properties = Array.from(computedStyle).map(prop =>
-    `<span style="color:#00BCEA;">${prop}</span>: ${computedStyle.getPropertyValue(prop)};`
-  );
-  return properties;
-}
+function fallbackCopyTextToClipboard(text) {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.cssText = 'position:fixed;opacity:0;left:-9999px;';
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
 
-function showCopiedNotification() {
-  // Remove any existing notification
-  let existingNotification = document.querySelector('.copied-notification');
-  if (existingNotification) {
-    existingNotification.remove();
-    clearTimeout(window.notificationTimeout);
+  try {
+    const successful = document.execCommand('copy');
+    showNotification(successful ? `Color ${text} copied!` : 'Failed to copy color', successful ? 'success' : 'error');
+  } catch (err) {
+    console.error('Fallback: Unable to copy', err);
+    showNotification('Failed to copy color', 'error');
   }
 
-  const notification = document.createElement('div');
-  notification.className = 'copied-notification';
-  notification.style.position = 'fixed';
-  notification.style.top = '20px';
-  notification.style.right = '20px';
-  notification.style.zIndex = '10001';  // Ensure the notification is on top
-  notification.style.backgroundColor = '#23282e';
-  notification.style.color = '#4ADC71';
-  notification.style.padding = '10px 20px';
-  notification.style.borderRadius = '8px';
-  notification.style.fontFamily = 'Inter, Arial, sans-serif';  // Fallback to Arial
-  notification.style.fontSize = '14px';  // Updated font size
-  notification.style.fontWeight = 'bold';  // Make the text bold
-  notification.style.display = 'flex';
-  notification.style.alignItems = 'center';
-  notification.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="#4ADC71" viewBox="0 0 24 24" width="24px" height="24px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M9 16.17l-4.17-4.17-1.41 1.41L9 19 20.59 7.41l-1.41-1.41z"/></svg><span style="margin-left: 10px;">Copied to clipboard!</span>`;
+  document.body.removeChild(textArea);
+}
 
-  document.body.appendChild(notification);
+// ===================================
+// SCREENSHOT TOOL
+// ===================================
+function handleScreenshot() {
+  showNotification('Screenshot functionality requires extension permissions. Use browser screenshot tool or right-click > Save as...', 'info');
+}
 
-  window.notificationTimeout = setTimeout(() => {
-    notification.style.transition = 'opacity 0.5s';
-    notification.style.opacity = '0';
+// ===================================
+// MEASUREMENT TOOL
+// ===================================
+function handleMeasurement() {
+  if (window.csaeToolkit.measurementBox) {
+    removeMeasurement();
+    return;
+  }
+
+  showNotification('Click and drag to measure. Press ESC to exit.', 'info');
+
+  let startX, startY, measureBox;
+
+  const startMeasure = (e) => {
+    startX = e.clientX;
+    startY = e.clientY;
+
+    measureBox = document.createElement('div');
+    measureBox.style.cssText = `
+      position: fixed;
+      border: 2px dashed #4ADC71;
+      background: rgba(74, 220, 113, 0.1);
+      pointer-events: none;
+      z-index: 999999;
+    `;
+    document.body.appendChild(measureBox);
+
+    document.addEventListener('mousemove', updateMeasure);
+    document.addEventListener('mouseup', endMeasure);
+  };
+
+  const updateMeasure = (e) => {
+    const width = Math.abs(e.clientX - startX);
+    const height = Math.abs(e.clientY - startY);
+    const left = Math.min(e.clientX, startX);
+    const top = Math.min(e.clientY, startY);
+
+    measureBox.style.left = left + 'px';
+    measureBox.style.top = top + 'px';
+    measureBox.style.width = width + 'px';
+    measureBox.style.height = height + 'px';
+
+    measureBox.innerHTML = `<div style="background: #282A33; color: #4ADC71; padding: 5px; position: absolute; top: -30px; left: 0; font-size: 12px; border-radius: 4px;">${width}px × ${height}px</div>`;
+  };
+
+  const endMeasure = () => {
+    document.removeEventListener('mousemove', updateMeasure);
+    document.removeEventListener('mouseup', endMeasure);
+    document.removeEventListener('mousedown', startMeasure);
+
     setTimeout(() => {
-      notification.remove();
-      // Show hover box again
-      window.hoverBox.style.display = 'block';
-    }, 500);
-  }, 2000);
+      if (measureBox && measureBox.parentNode) {
+        measureBox.remove();
+      }
+    }, 3000);
+  };
+
+  document.addEventListener('mousedown', startMeasure);
+  window.csaeToolkit.measurementBox = measureBox;
 }
 
-// SECTION 2: MODAL WINDOW TO SHOW MESSAGE INTRUCTIONS FOR VIEWING CSAE CONFIG
-if (!window.modalInitialized) {
-  // Create and inject modal HTML
+function removeMeasurement() {
+  if (window.csaeToolkit.measurementBox && window.csaeToolkit.measurementBox.parentNode) {
+    window.csaeToolkit.measurementBox.remove();
+  }
+  window.csaeToolkit.measurementBox = null;
+}
+
+// ===================================
+// GRID OVERLAY
+// ===================================
+function handleToggleGrid() {
+  if (window.csaeToolkit.gridActive) {
+    removeGrid();
+  } else {
+    createGrid();
+  }
+}
+
+function createGrid() {
+  const gridOverlay = document.createElement('div');
+  gridOverlay.id = 'csae-grid-overlay';
+  gridOverlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 999998;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(74, 220, 113, 0.3) 0px, rgba(74, 220, 113, 0.3) 1px, transparent 1px, transparent 10px),
+      repeating-linear-gradient(90deg, rgba(74, 220, 113, 0.3) 0px, rgba(74, 220, 113, 0.3) 1px, transparent 1px, transparent 10px),
+      repeating-linear-gradient(0deg, rgba(74, 220, 113, 0.5) 0px, rgba(74, 220, 113, 0.5) 2px, transparent 2px, transparent 50px),
+      repeating-linear-gradient(90deg, rgba(74, 220, 113, 0.5) 0px, rgba(74, 220, 113, 0.5) 2px, transparent 2px, transparent 50px);
+  `;
+  document.body.appendChild(gridOverlay);
+  window.csaeToolkit.gridActive = true;
+  showNotification('Grid overlay enabled. Press ESC or toggle again to disable.', 'info');
+}
+
+function removeGrid() {
+  const grid = document.getElementById('csae-grid-overlay');
+  if (grid) {
+    grid.remove();
+  }
+  window.csaeToolkit.gridActive = false;
+}
+
+// ===================================
+// IMAGE EXTRACTOR
+// ===================================
+function handleImageExtractor() {
+  const images = Array.from(document.querySelectorAll('img'));
+  const bgImages = Array.from(document.querySelectorAll('*'))
+    .map(el => {
+      const bg = window.getComputedStyle(el).backgroundImage;
+      const match = bg.match(/url\(['"]?([^'"]+)['"]?\)/);
+      return match ? match[1] : null;
+    })
+    .filter(Boolean);
+
+  const allImages = [...new Set([...images.map(img => img.src), ...bgImages])];
+
+  if (allImages.length === 0) {
+    showNotification('No images found on this page', 'info');
+    return;
+  }
+
+  // Create modal to display images
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000000;
+    overflow-y: auto;
+    padding: 20px;
+  `;
+
+  const content = document.createElement('div');
+  content.style.cssText = `
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #282A33;
+    padding: 20px;
+    border-radius: 8px;
+  `;
+
+  content.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="color: #4ADC71; margin: 0;">Extracted Images (${allImages.length})</h2>
+      <button id="close-image-modal" style="background: #649ef5; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Close</button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+      ${allImages.map((src, idx) => `
+        <div style="background: #353945; padding: 10px; border-radius: 4px;">
+          <img src="${src}" style="width: 100%; height: 150px; object-fit: contain; background: #fff; border-radius: 4px;" />
+          <a href="${src}" download="image-${idx}" target="_blank" style="display: block; margin-top: 10px; padding: 8px; background: #649ef5; color: white; text-align: center; text-decoration: none; border-radius: 4px; font-size: 12px;">Download</a>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+
+  document.getElementById('close-image-modal').onclick = () => modal.remove();
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.remove();
+  };
+}
+
+// ===================================
+// SEO META INSPECTOR
+// ===================================
+function handleSEOInspector() {
+  const getMeta = (name) => {
+    const meta = document.querySelector(`meta[name="${name}"], meta[property="${name}"]`);
+    return meta ? meta.content : 'Not found';
+  };
+
+  const seoData = {
+    'Page Title': document.title || 'Not found',
+    'Meta Description': getMeta('description'),
+    'Meta Keywords': getMeta('keywords'),
+    'Canonical URL': document.querySelector('link[rel="canonical"]')?.href || 'Not found',
+    'Open Graph Title': getMeta('og:title'),
+    'Open Graph Description': getMeta('og:description'),
+    'Open Graph Image': getMeta('og:image'),
+    'Open Graph URL': getMeta('og:url'),
+    'Twitter Card': getMeta('twitter:card'),
+    'Twitter Title': getMeta('twitter:title'),
+    'Twitter Description': getMeta('twitter:description'),
+    'Twitter Image': getMeta('twitter:image'),
+    'Robots': getMeta('robots'),
+    'Viewport': getMeta('viewport'),
+    'H1 Tags': Array.from(document.querySelectorAll('h1')).map(h => h.textContent.trim()).join(', ') || 'Not found',
+  };
+
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #282A33;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    z-index: 1000000;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  `;
+
+  modal.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="color: #4ADC71; margin: 0;">SEO Meta Inspector</h2>
+      <button id="close-seo-modal" style="background: #649ef5; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
+    </div>
+    <div style="font-size: 14px;">
+      ${Object.entries(seoData).map(([key, value]) => `
+        <div style="margin-bottom: 15px; padding: 10px; background: #353945; border-radius: 4px;">
+          <strong style="color: #4ADC71;">${key}:</strong><br>
+          <span style="word-break: break-word;">${value}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  document.getElementById('close-seo-modal').onclick = () => modal.remove();
+}
+
+// ===================================
+// ELEMENT EDITOR
+// ===================================
+function handleElementEditor() {
+  showNotification('Click on any text element to edit it. Press ESC to exit edit mode.', 'info');
+
+  const editHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = e.target;
+
+    if (target.isContentEditable) return;
+
+    target.contentEditable = 'true';
+    target.style.outline = '2px solid #4ADC71';
+    target.focus();
+
+    const saveEdit = () => {
+      target.contentEditable = 'false';
+      target.style.outline = '';
+      target.removeEventListener('blur', saveEdit);
+      showNotification('Element text updated!', 'success');
+    };
+
+    target.addEventListener('blur', saveEdit);
+
+    document.removeEventListener('click', editHandler);
+  };
+
+  document.addEventListener('click', editHandler, { once: true });
+}
+
+// ===================================
+// ELEMENT MANIPULATOR
+// ===================================
+function handleElementManipulator(mode) {
+  const messages = {
+    delete: 'Click on an element to delete it',
+    hide: 'Click on an element to hide it',
+    duplicate: 'Click on an element to duplicate it',
+  };
+
+  showNotification(messages[mode] + '. Press ESC to cancel.', 'info');
+
+  const manipulateHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = e.target;
+
+    switch(mode) {
+      case 'delete':
+        target.remove();
+        showNotification('Element deleted!', 'success');
+        break;
+      case 'hide':
+        target.style.display = 'none';
+        showNotification('Element hidden!', 'success');
+        break;
+      case 'duplicate':
+        const clone = target.cloneNode(true);
+        target.parentNode.insertBefore(clone, target.nextSibling);
+        showNotification('Element duplicated!', 'success');
+        break;
+    }
+
+    document.removeEventListener('click', manipulateHandler);
+  };
+
+  document.addEventListener('click', manipulateHandler, { once: true });
+}
+
+// ===================================
+// ELEMENT EXPORT
+// ===================================
+function handleElementExport() {
+  showNotification('Click on an element to export its HTML and CSS', 'info');
+
+  const exportHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = e.target;
+    const html = target.outerHTML;
+    const css = getCSSProperties(target).join('\n');
+
+    const exportData = `/* HTML */\n${html}\n\n/* CSS */\n${target.tagName.toLowerCase()} {\n${css}\n}`;
+
+    navigator.clipboard.writeText(exportData).then(() => {
+      showNotification('Element HTML and CSS copied to clipboard!', 'success');
+    }).catch(() => {
+      showNotification('Failed to copy element data', 'error');
+    });
+
+    document.removeEventListener('click', exportHandler);
+  };
+
+  document.addEventListener('click', exportHandler, { once: true });
+}
+
+// ===================================
+// FONT CHANGER
+// ===================================
+function handleFontChanger() {
+  const fonts = [
+    'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Verdana',
+    'Georgia', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact',
+    'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins'
+  ];
+
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #282A33;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    z-index: 1000000;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  `;
+
+  modal.innerHTML = `
+    <h2 style="color: #4ADC71; margin-bottom: 20px;">Change Page Font</h2>
+    <select id="font-selector" style="width: 100%; padding: 10px; background: #353945; color: white; border: none; border-radius: 4px; margin-bottom: 15px; font-size: 14px;">
+      <option value="">Select a font...</option>
+      ${fonts.map(font => `<option value="${font}" style="font-family: ${font};">${font}</option>`).join('')}
+    </select>
+    <div style="display: flex; gap: 10px;">
+      <button id="apply-font" style="flex: 1; padding: 10px; background: #649ef5; color: white; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+      <button id="reset-font" style="flex: 1; padding: 10px; background: #44696d; color: white; border: none; border-radius: 4px; cursor: pointer;">Reset</button>
+      <button id="close-font-modal" style="padding: 10px; background: #353945; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  document.getElementById('apply-font').onclick = () => {
+    const selectedFont = document.getElementById('font-selector').value;
+    if (selectedFont) {
+      document.body.style.fontFamily = selectedFont + ', sans-serif';
+      showNotification(`Font changed to ${selectedFont}`, 'success');
+    }
+  };
+
+  document.getElementById('reset-font').onclick = () => {
+    document.body.style.fontFamily = '';
+    showNotification('Font reset to default', 'success');
+  };
+
+  document.getElementById('close-font-modal').onclick = () => modal.remove();
+}
+
+// ===================================
+// CACHE CLEAR
+// ===================================
+function handleCacheClear() {
+  chrome.runtime.sendMessage({ action: 'clearBrowserCache' }, (response) => {
+    if (response && response.success) {
+      showNotification('Cache cleared successfully!', 'success');
+    } else {
+      showNotification('Failed to clear cache', 'error');
+    }
+  });
+}
+
+// ===================================
+// CONFIG MODAL
+// ===================================
+function showConfigModal() {
+  if (document.getElementById('myModal')) {
+    document.getElementById('myModal').style.display = 'flex';
+    return;
+  }
+
   const modalHTML = `
-    <div id="myModal" class="fixed inset-0 flex items-center justify-center z-50" style="display: none;">
+    <div id="myModal" class="fixed inset-0 flex items-center justify-center z-50" style="display: flex;">
       <div class="bg-gray-800 rounded-lg shadow-md p-6 text-white w-3/4 max-w-2xl">
         <h2 class="text-2xl font-semibold mb-4" style="color: #649ef5;">Steps to Retrieve and View CSAE Config Stored on Your Browser</h2>
         <ol class="list-decimal list-inside ml-4 mb-4">
@@ -348,221 +759,153 @@ if (!window.modalInitialized) {
   `;
 
   const modalCSS = `
-    .fixed {
-      position: fixed;
-    }
-    .inset-0 {
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-    }
-    .flex {
-      display: flex;
-    }
-    .items-center {
-      align-items: center;
-    }
-    .justify-center {
-      justify-content: center;
-    }
-    .z-50 {
-      z-index: 50;
-    }
-    .bg-gray-800 {
-      background-color: #2d3748;
-    }
-    .rounded-lg {
-      border-radius: 0.5rem;
-    }
-    .shadow-md {
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .p-6 {
-      padding: 1.6rem;
-      font-weight: 400;
-    }
-    .text-white {
-      color: white;
-    }
-    .w-3/4 {
-      width: 75%;
-    }
-    .max-w-2xl {
-      max-width: 600px;
-    }
-    .text-2xl {
-      font-size: 1.8rem;
-    }
-    .font-semibold {
-      font-weight: 600;
-    }
-    .mb-4 {
-      margin-bottom: 1rem;
-    }
-    .list-decimal {
-      list-style-type: decimal;
-    }
-    .list-inside {
-      list-style-position: inside;
-    }
-    .ml-4 {
-      margin-left: 1rem;
-    }
-    .mb-2 {
-      margin-bottom: 0.5rem;
-    }
-    .list-disc {
-      list-style-type: disc;
-    }
-    .px-4 {
-      padding-left: 1rem;
-      padding-right: 1rem;
-    }
-    .py-2 {
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
-    }
-    .bg-blue-500 {
-      background-color: #4299e1;
-    }
-    .rounded {
-      border-radius: 0.25rem;
-    }
-    .hover\\:bg-blue-600:hover {
-      background-color: #3182ce;
-    }
-    .transition {
-      transition: all 0.2s ease-in-out;
-    }
-    .duration-300 {
-      transition-duration: 300ms;
-    }
-    .mt-4 {
-      margin-top: 1rem;
-    }
+    .fixed { position: fixed; }
+    .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-center { justify-content: center; }
+    .z-50 { z-index: 50; }
+    .bg-gray-800 { background-color: #2d3748; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .shadow-md { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+    .p-6 { padding: 1.6rem; font-weight: 400; }
+    .text-white { color: white; }
+    .w-3/4 { width: 75%; }
+    .max-w-2xl { max-width: 600px; }
+    .text-2xl { font-size: 1.8rem; }
+    .font-semibold { font-weight: 600; }
+    .mb-4 { margin-bottom: 1rem; }
+    .list-decimal { list-style-type: decimal; }
+    .list-inside { list-style-position: inside; }
+    .ml-4 { margin-left: 1rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .list-disc { list-style-type: disc; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .bg-blue-500 { background-color: #4299e1; }
+    .rounded { border-radius: 0.25rem; }
+    .hover\\:bg-blue-600:hover { background-color: #3182ce; }
+    .transition { transition: all 0.2s ease-in-out; }
+    .duration-300 { transition-duration: 300ms; }
+    .mt-4 { margin-top: 1rem; }
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-    body, button, h2, li {
-      font-family: 'Inter', Arial, sans-serif;
-    }
+    body, button, h2, li { font-family: 'Inter', Arial, sans-serif; }
   `;
 
-    // Inject the modal HTML and CSS into the page
   document.body.insertAdjacentHTML('beforeend', modalHTML);
   const style = document.createElement('style');
   style.textContent = modalCSS;
   document.head.appendChild(style);
 
-  // Add event listener to close the modal
   document.getElementById('closeModal').addEventListener('click', () => {
     document.getElementById('myModal').style.display = 'none';
   });
+}
 
-  // Function to show the modal
-  function showModal() {
-    document.getElementById('myModal').style.display = 'flex';
-  }
+// ===================================
+// UTILITY FUNCTIONS
+// ===================================
+function getUniqueSelector(el) {
+  if (!(el instanceof Element)) return '';
+  let path = [];
 
-  // Listen for messages to show the modal
-  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === 'viewConfig') {
-      showModal();
+  while (el && el.nodeType === Node.ELEMENT_NODE) {
+    let selector = el.nodeName.toLowerCase();
+    if (el.id) {
+      selector = `#${el.id}`;
+      path.unshift(selector);
+      break;
+    } else if (typeof el.className === 'string' && el.className.trim()) {
+      let classes = el.className.trim().split(/\s+/).join('.');
+      if (classes) {
+        selector += `.${classes}`;
+      }
     }
-  });
+    let sib = el;
+    let nth = 1;
+    while (sib = sib.previousElementSibling) {
+      if (sib.nodeName.toLowerCase() === selector) nth++;
+    }
+    if (nth !== 1) {
+      selector += `:nth-of-type(${nth})`;
+    }
+    path.unshift(selector);
+    el = el.parentNode;
+  }
 
-  // Mark the modal as initialized
-  window.modalInitialized = true;
+  while (path.length > 1 && !path[0].includes('#') && !path[0].includes('.')) {
+    path.shift();
+  }
+
+  return path.join(' > ');
 }
 
-
-// SECION 3: COLOR PICKER FUNCTIONALITY
-function pickColorHandler() {
-  if ('EyeDropper' in window) {
-    const eyeDropper = new window.EyeDropper();
-    eyeDropper.open().then(result => {
-      console.log('Color picked:', result.sRGBHex); // Log the picked color
-
-      // Try using the Clipboard API first
-      navigator.clipboard.writeText(result.sRGBHex).then(() => {
-        console.log('Color copied to clipboard:', result.sRGBHex); // Log successful copy
-        showColorCopiedNotification(`Color ${result.sRGBHex} copied to clipboard!`);
-      }).catch(() => {
-        // Fallback to document.execCommand('copy')
-        fallbackCopyTextToClipboard(result.sRGBHex);
-      });
-    }).catch(() => {
-      showColorCopiedNotification('Failed to pick color');
-    });
+function getElementValue(el) {
+  if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+    return el.value;
   } else {
-    showColorCopiedNotification('EyeDropper API not supported');
+    return el.textContent.trim();
   }
 }
 
-function fallbackCopyTextToClipboard(text) {
-  const textArea = document.createElement('textarea');
-  textArea.value = text;
-  textArea.style.position = 'fixed'; // Avoid scrolling to bottom
-  textArea.style.opacity = '0';
-  textArea.style.left = '-9999px';
-  document.body.appendChild(textArea);
-  textArea.focus();
-  textArea.select();
-
-  try {
-    const successful = document.execCommand('copy');
-    const msg = successful ? 'successful' : 'unsuccessful';
-    console.log('Fallback: Copying text command was ' + msg);
-    showColorCopiedNotification(`Color ${text} copied to clipboard!`);
-  } catch (err) {
-    console.error('Fallback: Oops, unable to copy');
-    showColorCopiedNotification('Failed to copy color');
-  }
-
-  document.body.removeChild(textArea);
+function getCSSProperties(el) {
+  const computedStyle = window.getComputedStyle(el);
+  const properties = Array.from(computedStyle).map(prop =>
+    `<span style="color:#00BCEA;">${prop}</span>: ${computedStyle.getPropertyValue(prop)};`
+  );
+  return properties;
 }
 
-function showColorCopiedNotification(message) {
+function showNotification(message, type = 'success') {
   // Remove any existing notification
-  let existingNotification = document.querySelector('.copied-notification');
+  let existingNotification = document.querySelector('.csae-notification');
   if (existingNotification) {
     existingNotification.remove();
-    clearTimeout(window.notificationTimeout);
+    clearTimeout(window.csaeToolkit.notificationTimeout);
   }
 
+  const colors = {
+    success: '#4ADC71',
+    error: '#FF4444',
+    info: '#649ef5',
+  };
+
   const notification = document.createElement('div');
-  notification.className = 'copied-notification';
-  notification.style.position = 'fixed';
-  notification.style.top = '20px';
-  notification.style.right = '20px';
-  notification.style.zIndex = '10001';  // Ensure the notification is on top
-  notification.style.backgroundColor = '#23282e';
-  notification.style.color = '#4ADC71';
-  notification.style.padding = '10px 20px';
-  notification.style.borderRadius = '8px';
-  notification.style.fontFamily = 'Inter, Arial, sans-serif';  // Fallback to Arial
-  notification.style.fontSize = '14px';  // Updated font size
-  notification.style.fontWeight = 'bold';  // Make the text bold
-  notification.style.display = 'flex';
-  notification.style.alignItems = 'center';
-  notification.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="#4ADC71" viewBox="0 0 24 24" width="24px" height="24px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M9 16.17l-4.17-4.17-1.41 1.41L9 19 20.59 7.41l-1.41-1.41z"/></svg><span style="margin-left: 10px;">${message}</span>`;
+  notification.className = 'csae-notification';
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10001;
+    background-color: #23282e;
+    color: ${colors[type]};
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  `;
+
+  const icon = type === 'success'
+    ? '<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="24px" height="24px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M9 16.17l-4.17-4.17-1.41 1.41L9 19 20.59 7.41l-1.41-1.41z"/></svg>'
+    : type === 'error'
+    ? '<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="24px" height="24px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>'
+    : '<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="24px" height="24px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>';
+
+  notification.innerHTML = `${icon}<span style="margin-left: 10px;">${message}</span>`;
 
   document.body.appendChild(notification);
 
-  window.notificationTimeout = setTimeout(() => {
+  window.csaeToolkit.notificationTimeout = setTimeout(() => {
     notification.style.transition = 'opacity 0.5s';
     notification.style.opacity = '0';
     setTimeout(() => {
       notification.remove();
     }, 500);
-  }, 2000);
+  }, 3000);
 }
 
-// SECTION 4: STORAGE VIEWER RETURNED RESULTS
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'storageData') {
-    console.log('Received storage data from DevTools panel:', message.data);
-    // Handle the received data as needed
-    alert('Received storage data from DevTools panel. Check the console for details.');
-    sendResponse({ status: 'success' });
-  }
-});
+console.log('CSAE Toolkit v3.0 Content Script Loaded');

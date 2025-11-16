@@ -24,6 +24,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ success: true });
     });
     return true; // Keeps the message channel open for sendResponse
+  } else if (message.action === 'clearBrowserCache') {
+    chrome.browsingData.removeCache({}, () => {
+      if (chrome.runtime.lastError) {
+        sendResponse({ success: false, error: chrome.runtime.lastError.message });
+      } else {
+        sendResponse({ success: true });
+      }
+    });
+    return true; // Keeps the message channel open for sendResponse
+  } else if (message.action === 'clearIndexedDB') {
+    chrome.browsingData.removeIndexedDB({}, () => {
+      if (chrome.runtime.lastError) {
+        sendResponse({ success: false, error: chrome.runtime.lastError.message });
+      } else {
+        sendResponse({ success: true });
+      }
+    });
+    return true; // Keeps the message channel open for sendResponse
   }
 });
 
