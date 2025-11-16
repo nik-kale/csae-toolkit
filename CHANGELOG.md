@@ -5,6 +5,67 @@ All notable changes to the CSAE Toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] - 2025-01-16
+
+### 🎉 Polish & Quality Release
+
+This release focuses on documentation, backend improvements, and developer experience enhancements.
+
+### ✨ Added
+
+- **Comprehensive User Guide** - Complete rewrite of UserGuide.jsx
+  - All v4 features documented with visual indicators
+  - Organized sections: Quick Start, Keyboard Shortcuts, Features, Use Cases
+  - Tips & Tricks section with pro tips
+  - Troubleshooting guide
+  - Professional formatting with color-coded sections
+
+- **IMPROVEMENTS.md** - Comprehensive roadmap document
+  - Known issues with actionable solutions
+  - Future enhancement ideas categorized by priority
+  - Technical debt tracking
+  - Contributing guidelines
+
+### 🔧 Enhanced
+
+- **Background Service Worker (background.js)**
+  - Production-safe logging system (no console pollution)
+  - Better error handling and message routing
+  - Default settings initialization on first install
+  - Improved cookie operations with proper error handling
+  - Broadcast system for copy history updates across contexts
+  - Service worker lifecycle logging
+
+- **DevTools Panel (panel.js)**
+  - Loading states with animated spinners
+  - Success/error message display with auto-hide
+  - Confirmation dialog before clearing storage
+  - Storage size display (items count + KB)
+  - Keyboard shortcut: Ctrl/Cmd+R to reload
+  - Better empty state and error handling
+  - Professional welcome screen with branding
+  - Storage info header showing size metrics
+
+### 📚 Documentation
+
+- Enhanced user guide with all v4 features
+- Created improvements roadmap
+- Documented icon optimization requirements
+- Added troubleshooting section
+
+### 🐛 Fixed
+
+- Console pollution in background worker (removed development logs)
+- Duplicate event listener in background.js
+- Missing error handling in cookie operations
+- Poor UX in DevTools panel (no loading states)
+
+### 📝 Notes
+
+- Icon optimization still pending (requires image processing tools)
+- See IMPROVEMENTS.md for detailed future roadmap
+- All core v4 features are stable and production-ready
+
 ## [4.0.0] - 2025-01-16
 
 ### 🎉 Major Release - Version 4.0
