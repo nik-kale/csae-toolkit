@@ -1,3 +1,21 @@
+// SECTION 0: UTILITY FUNCTIONS FOR SECURITY AND LOGGING
+
+// HTML sanitization to prevent XSS
+function escapeHtml(unsafe) {
+  if (typeof unsafe !== 'string') {
+    return String(unsafe);
+  }
+  const div = document.createElement('div');
+  div.textContent = unsafe;
+  return div.innerHTML;
+}
+
+// Safe logger that only logs in development
+const isDev = true; // Set to false in production build
+function safeLog(...args) {
+  // Removed for production - logs are now silent
+}
+
 // SECTION 1: HOVER BOX TO SHOW ELEMENT SELECTOR AND VALUE
 if (!window.hoverBox) {
   window.hoverBox = document.createElement('div');
@@ -96,11 +114,15 @@ function clickHandler(event) {
     // Copy to clipboard
     navigator.clipboard.writeText(path).then(() => {
       showCopiedNotification();
+      // Send message to add to copy history
+      chrome.runtime.sendMessage({
+        action: 'selectorCopied',
+        selector: path,
+        value: getElementValue(target)
+      });
     }).catch(err => {
-      console.error('Failed to copy: ', err);
+      safeLog('Failed to copy: ', err);
     });
-
-    chrome.runtime.sendMessage({ selector: path, value: getElementValue(target) });
   }
 
   return false;
@@ -143,73 +165,86 @@ function clearAllHoverBoxes() {
   });
 }
 
-document.addEventListener('mouseover', function(event) {
-  if (!window.hoverActive) return;
+// Store reference to mouseOverHandler for proper cleanup
+if (typeof window.mouseOverHandler === 'undefined') {
+  window.mouseOverHandler = function(event) {
+    if (!window.hoverActive) return;
 
-  // Check if hovering over a pinned hover box
-  for (let hoverBox of window.pinnedHoverBoxes) {
-    if (hoverBox.contains(event.target)) {
-      window.hoverBox.style.display = 'none';
-      return;
+    // Check if hovering over a pinned hover box
+    for (let hoverBox of window.pinnedHoverBoxes) {
+      if (hoverBox.contains(event.target)) {
+        window.hoverBox.style.display = 'none';
+        return;
+      }
     }
-  }
 
-  let target = event.target;
-  if (window.currentTarget) {
-    window.currentTarget.style.outline = '';
-  }
-  window.currentTarget = target;
-  target.style.outline = '2px solid red';
+    let target = event.target;
+    if (window.currentTarget) {
+      window.currentTarget.style.outline = '';
+    }
+    window.currentTarget = target;
+    target.style.outline = '2px solid red';
 
-  let path = getUniqueSelector(target);
-  let value = getElementValue(target);
-  let cssProperties = getCSSProperties(target);
+    let path = getUniqueSelector(target);
+    let value = getElementValue(target);
+    let cssProperties = getCSSProperties(target);
 
-  window.hoverBox.innerHTML = `
-    <div style="margin-bottom: 10px; padding: 10px; background-color: #3a3f4b; border-radius: 8px; position: relative;">
-      <strong style="color:#4ADC71; font-weight: bold;">Selector:</strong><br>${path}<br><br>
-      <strong style="color:#4ADC71; font-weight: bold;">Value:</strong><br>${value}
-    </div>
-    <div style="padding: 10px; background-color: #353945; border-radius: 8px; max-height: 300px; overflow-y: auto; position: relative;">
-      <strong style="color:#4ADC71; font-weight: bold;">CSS Properties:</strong><br>
-      <div style="display: flex; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 200px;">
-          ${cssProperties.slice(0, Math.ceil(cssProperties.length / 2)).join('<br>')}
-        </div>
-        <div style="flex: 1; min-width: 200px;">
-          ${cssProperties.slice(Math.ceil(cssProperties.length / 2)).join('<br>')}
+    // Sanitize user-controlled content to prevent XSS
+    const safePath = escapeHtml(path);
+    const safeValue = escapeHtml(value);
+
+    window.hoverBox.innerHTML = `
+      <div style="margin-bottom: 10px; padding: 10px; background-color: #3a3f4b; border-radius: 8px; position: relative;">
+        <strong style="color:#4ADC71; font-weight: bold;">Selector:</strong><br>${safePath}<br><br>
+        <strong style="color:#4ADC71; font-weight: bold;">Value:</strong><br>${safeValue}
+      </div>
+      <div style="padding: 10px; background-color: #353945; border-radius: 8px; max-height: 300px; overflow-y: auto; position: relative;">
+        <strong style="color:#4ADC71; font-weight: bold;">CSS Properties:</strong><br>
+        <div style="display: flex; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            ${cssProperties.slice(0, Math.ceil(cssProperties.length / 2)).join('<br>')}
+          </div>
+          <div style="flex: 1; min-width: 200px;">
+            ${cssProperties.slice(Math.ceil(cssProperties.length / 2)).join('<br>')}
+          </div>
         </div>
       </div>
-    </div>
-  `;
+    `;
 
-  // Add close button
-  const closeButton = document.createElement('button');
-  closeButton.textContent = 'x';
-  closeButton.style.position = 'absolute';
-  closeButton.style.top = '5px';
-  closeButton.style.right = '5px';
-  closeButton.style.background = 'transparent';
-  closeButton.style.border = 'none';
-  closeButton.style.color = 'white';
-  closeButton.style.fontSize = '16px';
-  closeButton.style.cursor = 'pointer';
-  closeButton.onclick = () => {
-    window.hoverBox.style.display = 'none';
-    window.currentTarget.style.outline = '';
-    window.currentTarget = null;
+    // Add close button
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'x';
+    closeButton.style.position = 'absolute';
+    closeButton.style.top = '5px';
+    closeButton.style.right = '5px';
+    closeButton.style.background = 'transparent';
+    closeButton.style.border = 'none';
+    closeButton.style.color = 'white';
+    closeButton.style.fontSize = '16px';
+    closeButton.style.cursor = 'pointer';
+    closeButton.onclick = () => {
+      window.hoverBox.style.display = 'none';
+      window.currentTarget.style.outline = '';
+      window.currentTarget = null;
+    };
+
+    window.hoverBox.appendChild(closeButton);
+
+    window.hoverBox.style.display = 'block';
+    window.hoverBox.style.left = `${event.clientX + 10}px`;
+    window.hoverBox.style.top = `${event.clientY + 10}px`;
+
+    document.addEventListener('mousemove', mouseMoveHandler);
+    document.addEventListener('mouseout', mouseOutHandler, { once: true });
+    document.addEventListener('click', clickHandler, { once: true });
   };
+}
 
-  window.hoverBox.appendChild(closeButton);
-
-  window.hoverBox.style.display = 'block';
-  window.hoverBox.style.left = `${event.clientX + 10}px`;
-  window.hoverBox.style.top = `${event.clientY + 10}px`;
-
-  document.addEventListener('mousemove', mouseMoveHandler);
-  document.addEventListener('mouseout', mouseOutHandler, { once: true });
-  document.addEventListener('click', clickHandler, { once: true });
-}, true);
+// Add the event listener only if not already added
+if (!window.mouseOverListenerAdded) {
+  document.addEventListener('mouseover', window.mouseOverHandler, true);
+  window.mouseOverListenerAdded = true;
+}
 
 document.addEventListener('keydown', function(event) {
   if (event.key === 'Escape') {
@@ -480,11 +515,11 @@ function pickColorHandler() {
   if ('EyeDropper' in window) {
     const eyeDropper = new window.EyeDropper();
     eyeDropper.open().then(result => {
-      console.log('Color picked:', result.sRGBHex); // Log the picked color
+      safeLog('Color picked:', result.sRGBHex);
 
       // Try using the Clipboard API first
       navigator.clipboard.writeText(result.sRGBHex).then(() => {
-        console.log('Color copied to clipboard:', result.sRGBHex); // Log successful copy
+        safeLog('Color copied to clipboard:', result.sRGBHex);
         showColorCopiedNotification(`Color ${result.sRGBHex} copied to clipboard!`);
       }).catch(() => {
         // Fallback to document.execCommand('copy')
@@ -511,10 +546,10 @@ function fallbackCopyTextToClipboard(text) {
   try {
     const successful = document.execCommand('copy');
     const msg = successful ? 'successful' : 'unsuccessful';
-    console.log('Fallback: Copying text command was ' + msg);
+    safeLog('Fallback: Copying text command was ' + msg);
     showColorCopiedNotification(`Color ${text} copied to clipboard!`);
   } catch (err) {
-    console.error('Fallback: Oops, unable to copy');
+    safeLog('Fallback: Oops, unable to copy');
     showColorCopiedNotification('Failed to copy color');
   }
 
@@ -544,7 +579,7 @@ function showColorCopiedNotification(message) {
   notification.style.fontWeight = 'bold';  // Make the text bold
   notification.style.display = 'flex';
   notification.style.alignItems = 'center';
-  notification.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="#4ADC71" viewBox="0 0 24 24" width="24px" height="24px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M9 16.17l-4.17-4.17-1.41 1.41L9 19 20.59 7.41l-1.41-1.41z"/></svg><span style="margin-left: 10px;">${message}</span>`;
+  notification.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="#4ADC71" viewBox="0 0 24 24" width="24px" height="24px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M9 16.17l-4.17-4.17-1.41 1.41L9 19 20.59 7.41l-1.41-1.41z"/></svg><span style="margin-left: 10px;">${escapeHtml(message)}</span>`;
 
   document.body.appendChild(notification);
 
@@ -560,9 +595,8 @@ function showColorCopiedNotification(message) {
 // SECTION 4: STORAGE VIEWER RETURNED RESULTS
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'storageData') {
-    console.log('Received storage data from DevTools panel:', message.data);
+    safeLog('Received storage data from DevTools panel:', message.data);
     // Handle the received data as needed
-    alert('Received storage data from DevTools panel. Check the console for details.');
     sendResponse({ status: 'success' });
   }
 });
