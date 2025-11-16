@@ -11,8 +11,12 @@ const CommandPalette = ({ onClose, onCommand }) => {
     { id: 'color-picker', name: 'Color Picker', icon: '🎨', action: 'colorPicker' },
     { id: 'storage-manager', name: 'Toggle Storage Manager', icon: '💾', action: 'toggleStorage' },
     { id: 'copy-history', name: 'Toggle Copy History', icon: '📋', action: 'toggleHistory' },
+    { id: 'backup-restore', name: 'Backup & Restore', icon: '📦', action: 'toggleBackup', badge: 'NEW' },
+    { id: 'storage-diff', name: 'Storage Diff Tool', icon: '🔍', action: 'toggleDiff', badge: 'NEW' },
+    { id: 'performance-monitor', name: 'Performance Monitor', icon: '📊', action: 'togglePerformance', badge: 'NEW' },
     { id: 'settings', name: 'Toggle Settings', icon: '⚙️', action: 'toggleSettings' },
     { id: 'user-guide', name: 'Toggle User Guide', icon: '📖', action: 'toggleGuide' },
+    { id: 'show-onboarding', name: 'Show Onboarding', icon: '👋', action: 'showOnboarding' },
     { id: 'csae-web', name: 'Navigate to CSAE Web', icon: '🌐', action: 'csaeWeb' },
     { id: 'admin-portal', name: 'Launch Admin Portal', icon: '🔐', action: 'adminPortal' },
   ];
@@ -89,6 +93,11 @@ const CommandPalette = ({ onClose, onCommand }) => {
               >
                 <span className="text-2xl">{cmd.icon}</span>
                 <span className="text-lg font-medium">{cmd.name}</span>
+                {cmd.badge && (
+                  <span className="text-xs bg-green-600 px-2 py-1 rounded ml-auto">
+                    {cmd.badge}
+                  </span>
+                )}
               </div>
             ))
           )}

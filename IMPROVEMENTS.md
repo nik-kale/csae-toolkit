@@ -2,9 +2,92 @@
 
 This document tracks completed improvements, known issues, and planned future enhancements.
 
-## ✅ Completed (v4.0 - v4.1)
+## ✅ Completed (v4.0 - v4.2)
 
-### v4.1 Improvements (Current Release)
+### v4.2 Improvements (Current Release)
+
+#### Selector Format Conversion
+- ✅ **CSS to XPath/JSPath Converter** - Full format conversion support
+  - Convert CSS selectors to XPath format
+  - Convert CSS selectors to JS Path (document.querySelector)
+  - In-UI format selector dropdown
+  - Format preference persistence
+  - Format-specific copy notifications
+
+#### Performance Monitoring Dashboard
+- ✅ **Performance Monitor Component** - Real-time performance tracking
+  - Storage quota monitoring with visual progress bar
+  - Memory usage statistics (JS heap when available)
+  - Storage metrics (items, size, history count)
+  - Color-coded warnings (green/yellow/red)
+  - Storage optimization tools (remove duplicates)
+  - Refresh metrics on-demand
+  - Optimization tips built-in
+
+#### Backup & Restore System
+- ✅ **Full Extension Data Backup** - Complete state management
+  - Export all extension data to JSON
+  - Import from previous backups
+  - Date-stamped backup filenames
+  - Storage quota indicator before backup
+  - Warning levels for quota usage
+
+#### Storage Diff Tool
+- ✅ **Storage State Comparison** - Track changes over time
+  - Create storage snapshots
+  - Compare two snapshots
+  - Detect added/removed/modified items
+  - Detailed diff view with old/new values
+  - Summary statistics
+  - Export diff results to JSON
+
+#### First-Time User Onboarding
+- ✅ **Interactive Tutorial** - Guided first-use experience
+  - 5-step walkthrough for new users
+  - What's New highlights with v4.2 features
+  - Quick start guide with essential actions
+  - Complete keyboard shortcuts reference
+  - Backup recommendations and best practices
+  - Visual progress indicator
+  - Skip and navigation controls
+
+#### Utility Enhancements
+- ✅ **selectorUtils.js** - Advanced selector manipulation
+  - CSS to XPath conversion
+  - CSS to JSPath conversion
+  - Selector optimizer (removes redundant parts)
+  - Selector validator (uniqueness checking)
+  - Alternative selector generator
+  - Reliability scoring (0-100)
+
+- ✅ **performance.js** - Performance utilities
+  - Debounce utility for frequent operations
+  - Throttle utility for rate limiting
+  - Memoization helper for caching
+  - PerformanceMonitor class
+  - Storage quota monitoring
+  - getChromeStorageQuota() function
+
+- ✅ **validation.js** - Data validation
+  - Zod-like validation schemas
+  - String, number, boolean, object, array validators
+  - Custom validation rules
+  - Schema composition
+  - Settings validation
+
+#### Security Enhancements
+- ✅ **Enhanced Content Security Policy**
+  - object-src 'none' - No plugin objects
+  - base-uri 'self' - Prevent base tag injection
+  - form-action 'self' - Restrict form submissions
+  - frame-ancestors 'none' - Prevent clickjacking
+  - upgrade-insecure-requests - Force HTTPS
+- ✅ **Content Script Hardening**
+  - all_frames: false to prevent iframe injection
+  - XSS protection in selector formats
+  - Format validation for conversions
+
+### v4.1 Improvements
 
 #### Enhanced Documentation
 - ✅ **Comprehensive User Guide** - Complete rewrite with all v4 features
@@ -107,35 +190,18 @@ npm audit fix
 
 **Link:** https://github.com/nik-kale/csae-toolkit/security/dependabot
 
-## 🚀 Future Enhancements (v4.2+)
+## 🚀 Future Enhancements (v4.3+)
 
 ### High Priority
 
-#### 1. Copy Selector Format Options
-**Description:** Allow users to choose selector format
-- CSS Selector (current default)
-- XPath
-- JS Path (querySelector)
-- Full Path vs Optimized
+#### 1. ~~Copy Selector Format Options~~ ✅ COMPLETED in v4.2
+~~Allow users to choose selector format~~ - **Implemented in v4.2.0**
 
-**Implementation Notes:**
-- Add format picker to selector grab UI
-- Store preference in settings
-- Provide conversion utilities
+#### 2. ~~Selector Optimizer~~ ✅ COMPLETED in v4.2
+~~Suggest shorter, more reliable selectors~~ - **Implemented in v4.2.0**
 
-#### 2. Selector Optimizer
-**Description:** Suggest shorter, more reliable selectors
-- Analyze current selector
-- Suggest optimizations (remove unnecessary nth-child, use more specific classes)
-- Validate uniqueness
-- Show element count matched
-
-#### 3. Storage Size Warnings
-**Description:** Monitor quota usage
-- Display current storage usage
-- Warn when approaching limits (chrome.storage has quotas)
-- Suggest cleanup actions
-- Visual progress bar
+#### 3. ~~Storage Size Warnings~~ ✅ COMPLETED in v4.2
+~~Monitor quota usage~~ - **Implemented in v4.2.0 via Performance Monitor**
 
 ### Medium Priority
 
@@ -151,19 +217,11 @@ npm audit fix
 - Display in dedicated panel
 - Real-time updates
 
-#### 5. Storage Diff Tool
-**Description:** Compare storage between states
-- Take snapshots
-- Compare before/after
-- Highlight changes (added/modified/deleted)
-- Export diff as JSON
+#### 5. ~~Storage Diff Tool~~ ✅ COMPLETED in v4.2
+~~Compare storage between states~~ - **Implemented in v4.2.0**
 
-#### 6. Backup/Restore All Settings
-**Description:** One-click backup of entire extension state
-- Export all settings, history, theme
-- Import to restore complete state
-- Include timestamp and version info
-- Validate on import
+#### 6. ~~Backup/Restore All Settings~~ ✅ COMPLETED in v4.2
+~~One-click backup of entire extension state~~ - **Implemented in v4.2.0**
 
 #### 7. Element Hierarchy Breadcrumb
 **Description:** Show element's position in DOM
@@ -181,12 +239,8 @@ npm audit fix
 
 ### Low Priority
 
-#### 9. Performance Metrics Dashboard
-**Description:** Track extension performance
-- Memory usage
-- Storage size trends
-- Operation timing
-- Export metrics
+#### 9. ~~Performance Metrics Dashboard~~ ✅ COMPLETED in v4.2
+~~Track extension performance~~ - **Implemented in v4.2.0 via PerformanceMonitor component**
 
 #### 10. Advanced Selector Testing
 **Description:** Test selectors before using
@@ -223,7 +277,7 @@ npm audit fix
 - [ ] Lazy loading for heavy components
 - [ ] Virtual scrolling for large lists
 - [ ] Web Workers for heavy computations
-- [ ] Debounce/throttle optimizations
+- [x] Debounce/throttle optimizations ✅ v4.2
 
 ### Accessibility
 - [ ] WCAG 2.1 AALevel compliance audit
@@ -233,11 +287,11 @@ npm audit fix
 - [ ] Focus trap implementation
 
 ### Security
-- [ ] Content Security Policy review
+- [x] Content Security Policy review ✅ v4.2 (Enhanced CSP)
 - [ ] Permission minimization audit
-- [ ] Input sanitization review
-- [ ] Third-party dependency audit
-- [ ] Security headers
+- [x] Input sanitization review ✅ v4.2 (XSS protection in selectors)
+- [ ] Third-party dependency audit (see Known Issues)
+- [x] Security headers ✅ v4.2 (Enhanced CSP headers)
 
 ## 💡 Ideas for v5.0+
 

@@ -16,6 +16,82 @@ function safeLog(...args) {
   // Removed for production - logs are now silent
 }
 
+// SECTION 0.5: SELECTOR FORMAT CONVERSION UTILITIES
+
+// Current selector format (CSS, XPath, or JSPath)
+if (typeof window.selectorFormat === 'undefined') {
+  window.selectorFormat = 'CSS'; // Default to CSS
+}
+
+// Load selector format preference from storage
+chrome.storage.local.get(['selectorFormat'], (result) => {
+  if (result.selectorFormat) {
+    window.selectorFormat = result.selectorFormat;
+  }
+});
+
+// Convert CSS selector to XPath
+function cssToXPath(cssSelector) {
+  let xpath = '.';
+
+  // Handle ID selector
+  if (cssSelector.startsWith('#')) {
+    const id = cssSelector.slice(1).split(/[\s>+~]/)[0];
+    return `//*[@id="${id}"]`;
+  }
+
+  // Split by direct child combinator
+  const parts = cssSelector.split(/\s*>\s*/);
+
+  parts.forEach((part, index) => {
+    // Extract tag, classes, and nth-of-type
+    const tagMatch = part.match(/^([a-z][\w-]*)/i);
+    const classMatch = part.match(/\.([^\s.#[]+)/g);
+    const nthMatch = part.match(/:nth-of-type\((\d+)\)/);
+
+    const tag = tagMatch ? tagMatch[1] : '*';
+
+    if (index > 0) {
+      xpath += '/';
+    }
+
+    xpath += tag;
+
+    // Add class conditions
+    if (classMatch) {
+      classMatch.forEach(cls => {
+        const className = cls.slice(1);
+        xpath += `[contains(concat(' ', @class, ' '), ' ${className} ')]`;
+      });
+    }
+
+    // Add nth-of-type position
+    if (nthMatch) {
+      xpath += `[${nthMatch[1]}]`;
+    }
+  });
+
+  return xpath;
+}
+
+// Convert CSS selector to JS Path (document.querySelector format)
+function cssToJSPath(cssSelector) {
+  return `document.querySelector('${cssSelector.replace(/'/g, "\\'")}')`;
+}
+
+// Convert selector to the selected format
+function convertSelectorFormat(cssSelector, format) {
+  switch (format) {
+    case 'XPath':
+      return cssToXPath(cssSelector);
+    case 'JSPath':
+      return cssToJSPath(cssSelector);
+    case 'CSS':
+    default:
+      return cssSelector;
+  }
+}
+
 // SECTION 1: HOVER BOX TO SHOW ELEMENT SELECTOR AND VALUE
 if (!window.hoverBox) {
   window.hoverBox = document.createElement('div');
@@ -102,8 +178,11 @@ function clickHandler(event) {
   event.stopPropagation();
 
   let target = event.target;
-  let path = getUniqueSelector(target);
-  path = path.replace(/\s+/g, '');  // Remove all spaces from the selector
+  let cssPath = getUniqueSelector(target);
+  cssPath = cssPath.replace(/\s+/g, '');  // Remove all spaces from the selector
+
+  // Convert to the selected format
+  const path = convertSelectorFormat(cssPath, window.selectorFormat);
 
   if (event.altKey) {
     pinHoverBox(target, path);
@@ -111,14 +190,15 @@ function clickHandler(event) {
     // Hide hover box
     window.hoverBox.style.display = 'none';
 
-    // Copy to clipboard
+    // Copy to clipboard in the selected format
     navigator.clipboard.writeText(path).then(() => {
-      showCopiedNotification();
+      showCopiedNotification(window.selectorFormat);
       // Send message to add to copy history
       chrome.runtime.sendMessage({
         action: 'selectorCopied',
         selector: path,
-        value: getElementValue(target)
+        value: getElementValue(target),
+        format: window.selectorFormat
       });
     }).catch(err => {
       safeLog('Failed to copy: ', err);
@@ -193,9 +273,25 @@ if (typeof window.mouseOverHandler === 'undefined') {
     const safePath = escapeHtml(path);
     const safeValue = escapeHtml(value);
 
+    // Convert selector to all formats for display
+    const cssSelector = path;
+    const xpathSelector = convertSelectorFormat(cssSelector, 'XPath');
+    const jspathSelector = convertSelectorFormat(cssSelector, 'JSPath');
+    const currentFormatSelector = convertSelectorFormat(cssSelector, window.selectorFormat);
+    const safeCurrentFormatSelector = escapeHtml(currentFormatSelector);
+
     window.hoverBox.innerHTML = `
       <div style="margin-bottom: 10px; padding: 10px; background-color: #3a3f4b; border-radius: 8px; position: relative;">
-        <strong style="color:#4ADC71; font-weight: bold;">Selector:</strong><br>${safePath}<br><br>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <strong style="color:#4ADC71; font-weight: bold;">Selector Format:</strong>
+          <select id="selectorFormatDropdown" style="padding: 4px 8px; background-color: #282A33; color: white; border: 1px solid #4ADC71; border-radius: 4px; font-size: 12px; cursor: pointer;">
+            <option value="CSS" ${window.selectorFormat === 'CSS' ? 'selected' : ''}>CSS</option>
+            <option value="XPath" ${window.selectorFormat === 'XPath' ? 'selected' : ''}>XPath</option>
+            <option value="JSPath" ${window.selectorFormat === 'JSPath' ? 'selected' : ''}>JS Path</option>
+          </select>
+        </div>
+        <strong style="color:#4ADC71; font-weight: bold;">Selector (${window.selectorFormat}):</strong><br>
+        <span id="currentSelectorDisplay" style="word-break: break-all;">${safeCurrentFormatSelector}</span><br><br>
         <strong style="color:#4ADC71; font-weight: bold;">Value:</strong><br>${safeValue}
       </div>
       <div style="padding: 10px; background-color: #353945; border-radius: 8px; max-height: 300px; overflow-y: auto; position: relative;">
@@ -210,6 +306,35 @@ if (typeof window.mouseOverHandler === 'undefined') {
         </div>
       </div>
     `;
+
+    // Store selectors in all formats for easy access
+    window.hoverBox.dataset.cssSelector = cssSelector;
+    window.hoverBox.dataset.xpathSelector = xpathSelector;
+    window.hoverBox.dataset.jspathSelector = jspathSelector;
+
+    // Add event listener to format dropdown
+    const formatDropdown = document.getElementById('selectorFormatDropdown');
+    if (formatDropdown) {
+      formatDropdown.addEventListener('change', function(e) {
+        e.stopPropagation();
+        const newFormat = e.target.value;
+        window.selectorFormat = newFormat;
+
+        // Save to storage
+        chrome.storage.local.set({ selectorFormat: newFormat });
+
+        // Update the displayed selector
+        const convertedSelector = convertSelectorFormat(cssSelector, newFormat);
+        const selectorDisplay = document.getElementById('currentSelectorDisplay');
+        if (selectorDisplay) {
+          selectorDisplay.textContent = convertedSelector;
+        }
+
+        // Update the label
+        const labels = window.hoverBox.querySelectorAll('strong');
+        labels[1].textContent = `Selector (${newFormat}):`;
+      });
+    }
 
     // Add close button
     const closeButton = document.createElement('button');
@@ -308,7 +433,7 @@ function getCSSProperties(el) {
   return properties;
 }
 
-function showCopiedNotification() {
+function showCopiedNotification(format = 'CSS') {
   // Remove any existing notification
   let existingNotification = document.querySelector('.copied-notification');
   if (existingNotification) {
@@ -331,7 +456,7 @@ function showCopiedNotification() {
   notification.style.fontWeight = 'bold';  // Make the text bold
   notification.style.display = 'flex';
   notification.style.alignItems = 'center';
-  notification.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="#4ADC71" viewBox="0 0 24 24" width="24px" height="24px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M9 16.17l-4.17-4.17-1.41 1.41L9 19 20.59 7.41l-1.41-1.41z"/></svg><span style="margin-left: 10px;">Copied to clipboard!</span>`;
+  notification.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="#4ADC71" viewBox="0 0 24 24" width="24px" height="24px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M9 16.17l-4.17-4.17-1.41 1.41L9 19 20.59 7.41l-1.41-1.41z"/></svg><span style="margin-left: 10px;">${format} selector copied!</span>`;
 
   document.body.appendChild(notification);
 

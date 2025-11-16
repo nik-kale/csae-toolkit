@@ -5,20 +5,32 @@ import DateTime from './DateTime';
 import CopyHistory from './components/CopyHistory';
 import CommandPalette from './components/CommandPalette';
 import Settings from './components/Settings';
+import BackupRestore from './components/BackupRestore';
+import StorageDiff from './components/StorageDiff';
+import Onboarding from './components/Onboarding';
+import PerformanceMonitor from './components/PerformanceMonitor';
 
 const App = () => {
   const [showGuide, setShowGuide] = useState(false);
   const [showStorageManager, setShowStorageManager] = useState(false);
   const [showCopyHistory, setShowCopyHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showBackupRestore, setShowBackupRestore] = useState(false);
+  const [showStorageDiff, setShowStorageDiff] = useState(false);
+  const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(false);
   const [theme, setTheme] = useState('dark');
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Load theme from storage
+  // Check onboarding status and load theme
   useEffect(() => {
-    chrome.storage.local.get(['theme'], (result) => {
+    chrome.storage.local.get(['theme', 'onboardingCompleted'], (result) => {
       if (result.theme) {
         setTheme(result.theme);
+      }
+      // Show onboarding for first-time users
+      if (!result.onboardingCompleted) {
+        setShowOnboarding(true);
       }
     });
   }, []);
@@ -142,11 +154,23 @@ const App = () => {
       case 'toggleGuide':
         setShowGuide(!showGuide);
         break;
+      case 'toggleBackup':
+        setShowBackupRestore(!showBackupRestore);
+        break;
+      case 'toggleDiff':
+        setShowStorageDiff(!showStorageDiff);
+        break;
+      case 'togglePerformance':
+        setShowPerformanceMonitor(!showPerformanceMonitor);
+        break;
       case 'csaeWeb':
         navigateToURL('https://supportassistant.cisco.com/extension');
         break;
       case 'adminPortal':
         navigateToURL('https://go2.cisco.com/csae-admin-portal');
+        break;
+      case 'showOnboarding':
+        setShowOnboarding(true);
         break;
       default:
         break;
@@ -167,13 +191,18 @@ const App = () => {
 
   return (
     <div
-      className="App p-4 shadow-lg w-full h-screen"
+      className="App p-4 shadow-lg w-full h-screen overflow-y-auto"
       style={{
         fontFamily: 'Inter, Arial, sans-serif',
         backgroundColor: themeColors[theme].bg,
         color: theme === 'dark' ? 'white' : 'black'
       }}
     >
+      {/* Onboarding (first-time users) */}
+      {showOnboarding && (
+        <Onboarding onComplete={() => setShowOnboarding(false)} />
+      )}
+
       {showCommandPalette && (
         <CommandPalette
           onClose={() => setShowCommandPalette(false)}
@@ -251,6 +280,30 @@ const App = () => {
           </button>
           <button
             className="px-4 py-2 bg-[#649ef5] text-white rounded hover:bg-[#44696d] transition duration-300 w-full text-sm font-semibold"
+            onClick={() => setShowBackupRestore(!showBackupRestore)}
+            aria-label="Toggle Backup & Restore"
+          >
+            <span className="text-xs bg-green-600 px-2 py-1 rounded mr-2">NEW</span>
+            {showBackupRestore ? 'Hide Backup & Restore' : 'Backup & Restore'}
+          </button>
+          <button
+            className="px-4 py-2 bg-[#649ef5] text-white rounded hover:bg-[#44696d] transition duration-300 w-full text-sm font-semibold"
+            onClick={() => setShowStorageDiff(!showStorageDiff)}
+            aria-label="Toggle Storage Diff"
+          >
+            <span className="text-xs bg-green-600 px-2 py-1 rounded mr-2">NEW</span>
+            {showStorageDiff ? 'Hide Storage Diff' : 'Storage Diff Tool'}
+          </button>
+          <button
+            className="px-4 py-2 bg-[#649ef5] text-white rounded hover:bg-[#44696d] transition duration-300 w-full text-sm font-semibold"
+            onClick={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
+            aria-label="Toggle Performance Monitor"
+          >
+            <span className="text-xs bg-green-600 px-2 py-1 rounded mr-2">NEW</span>
+            {showPerformanceMonitor ? 'Hide Performance Monitor' : 'Performance Monitor'}
+          </button>
+          <button
+            className="px-4 py-2 bg-[#649ef5] text-white rounded hover:bg-[#44696d] transition duration-300 w-full text-sm font-semibold"
             onClick={() => setShowSettings(!showSettings)}
             aria-label="Toggle Settings"
           >
@@ -268,11 +321,15 @@ const App = () => {
         {showGuide && <UserGuide />}
         {showStorageManager && <StorageManager />}
         {showCopyHistory && <CopyHistory />}
+        {showBackupRestore && <BackupRestore />}
+        {showStorageDiff && <StorageDiff />}
+        {showPerformanceMonitor && <PerformanceMonitor />}
         {showSettings && <Settings theme={theme} onThemeToggle={toggleTheme} />}
 
         <br />
         <h4 className="text-center text-sm font-semibold mt-8 mb-2">Made with ☕ and ❤️ by Nik Kale</h4>
         <h4 className="text-center text-sm font-semibold my-4">© 2024-2025 Cisco Systems Inc.</h4>
+        <p className="text-center text-xs text-gray-500">Version 4.2.0</p>
       </div>
     </div>
   );

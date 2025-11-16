@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <h3 style="margin: 0 0 10px 0; color: #333;">CSAE Toolkit Storage Panel</h3>
         <p style="margin: 0 0 20px 0;">Click "Load chrome.storage.local" to view extension storage</p>
         <div style="font-size: 12px; color: #999;">
-          Version 4.0.0 | Made with ☕ and ❤️ by Nik Kale
+          Version 4.2.0 | Made with ☕ and ❤️ by Nik Kale
         </div>
       </div>
     `;
