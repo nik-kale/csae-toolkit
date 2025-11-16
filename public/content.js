@@ -46,7 +46,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     toggleHover: () => handleToggleHover(message),
     pickColor: () => handleColorPicker(),
     viewConfig: () => showConfigModal(),
-    takeScreenshot: () => handleScreenshot(),
+    takeScreenshot: () => handleScreenshot(message),
     measureElement: () => handleMeasurement(),
     toggleGrid: () => handleToggleGrid(),
     extractImages: () => handleImageExtractor(),
@@ -56,16 +56,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     exportElement: () => handleElementExport(),
     changeFont: () => handleFontChanger(),
     clearCache: () => handleCacheClear(),
+    liveCSSEditor: () => handleLiveCSSEditor(),
+    viewColorPalette: () => handleColorPaletteViewer(),
+    outlineElements: () => handleElementOutliner(),
+    highlightElement: () => handleElementHighlighter(),
+    performanceMetrics: () => handlePerformanceMetrics(),
+    responsiveTester: () => handleResponsiveTester(),
   };
 
   if (actions[message.action]) {
-    actions[message.action]();
-    sendResponse({ status: 'success' });
+    try {
+      actions[message.action]();
+      sendResponse({ status: 'success' });
+    } catch (error) {
+      console.error('CSAE Toolkit Error:', error);
+      showNotification(`Error: ${error.message}`, 'error');
+      sendResponse({ status: 'error', message: error.message });
+    }
   }
 
   if (message.type === 'storageData') {
     console.log('Received storage data from DevTools panel:', message.data);
-    alert('Received storage data from DevTools panel. Check the console for details.');
+    showNotification('Storage data received. Check console for details.', 'info');
+    sendResponse({ status: 'success' });
+  }
+
+  if (message.action === 'captureScreenshot') {
+    // Screenshot is handled by background script, just acknowledge
     sendResponse({ status: 'success' });
   }
 
@@ -302,8 +319,22 @@ function fallbackCopyTextToClipboard(text) {
 // ===================================
 // SCREENSHOT TOOL
 // ===================================
-function handleScreenshot() {
-  showNotification('Screenshot functionality requires extension permissions. Use browser screenshot tool or right-click > Save as...', 'info');
+function handleScreenshot(message) {
+  showNotification('Preparing screenshot...', 'info');
+
+  // Request screenshot from background script
+  chrome.runtime.sendMessage({ action: 'captureVisibleTab' }, (response) => {
+    if (response && response.dataUrl) {
+      // Create download link
+      const link = document.createElement('a');
+      link.href = response.dataUrl;
+      link.download = `csae-screenshot-${Date.now()}.png`;
+      link.click();
+      showNotification('Screenshot captured and downloaded!', 'success');
+    } else {
+      showNotification('Failed to capture screenshot', 'error');
+    }
+  });
 }
 
 // ===================================
@@ -908,4 +939,421 @@ function showNotification(message, type = 'success') {
   }, 3000);
 }
 
-console.log('CSAE Toolkit v3.0 Content Script Loaded');
+// ===================================
+// LIVE CSS EDITOR
+// ===================================
+function handleLiveCSSEditor() {
+  showNotification('Click on any element to edit its CSS properties', 'info');
+
+  const editHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = e.target;
+    const computedStyle = window.getComputedStyle(target);
+
+    // Create CSS editor modal
+    const modal = document.createElement('div');
+    modal.id = 'csae-css-editor-modal';
+    modal.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #282A33;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      z-index: 1000000;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      width: 90%;
+    `;
+
+    const commonProps = [
+      'color', 'background-color', 'font-size', 'font-weight', 'font-family',
+      'margin', 'padding', 'border', 'width', 'height', 'display',
+      'position', 'top', 'right', 'bottom', 'left', 'z-index',
+      'opacity', 'transform', 'transition', 'box-shadow', 'border-radius'
+    ];
+
+    const editorHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 style="color: #4ADC71; margin: 0; font-size: 18px;">Live CSS Editor</h2>
+        <button id="close-css-editor" style="background: #649ef5; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">Close</button>
+      </div>
+      <div style="font-size: 12px; color: #888; margin-bottom: 15px;">
+        Element: ${escapeHTML(target.tagName.toLowerCase())}${target.id ? '#' + target.id : ''}${target.className ? '.' + target.className.split(' ').join('.') : ''}
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
+        ${commonProps.map(prop => {
+          const value = computedStyle.getPropertyValue(prop);
+          return `
+            <div style="display: flex; flex-direction: column;">
+              <label style="color: #4ADC71; margin-bottom: 4px; font-size: 11px; text-transform: uppercase;">${prop}</label>
+              <input
+                type="text"
+                data-css-prop="${prop}"
+                value="${escapeHTML(value)}"
+                style="background: #353945; color: white; border: 1px solid #464b54; padding: 6px; border-radius: 4px; font-size: 12px;"
+              />
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <div style="margin-top: 15px; display: flex; gap: 10px;">
+        <button id="apply-css-changes" style="flex: 1; padding: 10px; background: #649ef5; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Apply Changes</button>
+        <button id="reset-css-changes" style="flex: 1; padding: 10px; background: #44696d; color: white; border: none; border-radius: 4px; cursor: pointer;">Reset to Original</button>
+      </div>
+    `;
+
+    modal.innerHTML = editorHTML;
+    document.body.appendChild(modal);
+
+    // Store original styles
+    const originalStyles = {};
+    commonProps.forEach(prop => {
+      originalStyles[prop] = target.style[toCamelCase(prop)];
+    });
+
+    // Apply changes
+    document.getElementById('apply-css-changes').onclick = () => {
+      const inputs = modal.querySelectorAll('input[data-css-prop]');
+      inputs.forEach(input => {
+        const prop = input.getAttribute('data-css-prop');
+        const value = input.value;
+        target.style[toCamelCase(prop)] = value;
+      });
+      showNotification('CSS changes applied!', 'success');
+    };
+
+    // Reset changes
+    document.getElementById('reset-css-changes').onclick = () => {
+      commonProps.forEach(prop => {
+        target.style[toCamelCase(prop)] = originalStyles[prop];
+      });
+      showNotification('CSS reset to original', 'info');
+      modal.remove();
+    };
+
+    // Close modal
+    document.getElementById('close-css-editor').onclick = () => modal.remove();
+
+    // Highlight element
+    target.style.outline = '3px solid #4ADC71';
+    const removeOutline = () => {
+      target.style.outline = '';
+    };
+    modal.addEventListener('remove', removeOutline);
+
+    document.removeEventListener('click', editHandler);
+  };
+
+  document.addEventListener('click', editHandler, { once: true });
+}
+
+// ===================================
+// COLOR PALETTE VIEWER
+// ===================================
+function handleColorPaletteViewer() {
+  chrome.storage.local.get(['colorPalette'], (result) => {
+    const palette = result.colorPalette || window.csaeToolkit.colorPalette || [];
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #282A33;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      z-index: 1000000;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      width: 90%;
+    `;
+
+    modal.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: #4ADC71; margin: 0;">Color Palette (${palette.length} colors)</h2>
+        <div>
+          <button id="clear-palette" style="background: #44696d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px;">Clear All</button>
+          <button id="close-palette" style="background: #649ef5; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
+        </div>
+      </div>
+      ${palette.length === 0 ? '<p style="text-align: center; color: #888;">No colors saved yet. Use the Color Picker to add colors to your palette.</p>' : `
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;">
+          ${palette.map((color, idx) => `
+            <div style="background: #353945; padding: 10px; border-radius: 4px; text-align: center;">
+              <div style="width: 100%; height: 60px; background: ${escapeHTML(color)}; border-radius: 4px; margin-bottom: 8px; border: 2px solid #464b54;"></div>
+              <div style="font-size: 12px; font-weight: bold; margin-bottom: 4px;">${escapeHTML(color)}</div>
+              <button class="copy-color" data-color="${escapeHTML(color)}" style="width: 100%; padding: 6px; background: #649ef5; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Copy</button>
+            </div>
+          `).join('')}
+        </div>
+      `}
+    `;
+
+    document.body.appendChild(modal);
+
+    // Copy color handlers
+    modal.querySelectorAll('.copy-color').forEach(btn => {
+      btn.onclick = () => {
+        const color = btn.getAttribute('data-color');
+        navigator.clipboard.writeText(color).then(() => {
+          showNotification(`${color} copied to clipboard!`, 'success');
+        });
+      };
+    });
+
+    // Clear palette
+    document.getElementById('clear-palette').onclick = () => {
+      if (confirm('Are you sure you want to clear all saved colors?')) {
+        chrome.storage.local.set({ colorPalette: [] });
+        window.csaeToolkit.colorPalette = [];
+        modal.remove();
+        showNotification('Color palette cleared', 'info');
+      }
+    };
+
+    // Close modal
+    document.getElementById('close-palette').onclick = () => modal.remove();
+  });
+}
+
+// ===================================
+// ELEMENT OUTLINER
+// ===================================
+function handleElementOutliner() {
+  if (window.csaeToolkit.outlinerActive) {
+    // Remove outlines
+    document.querySelectorAll('.csae-outlined').forEach(el => {
+      el.style.outline = '';
+      el.classList.remove('csae-outlined');
+    });
+    window.csaeToolkit.outlinerActive = false;
+    showNotification('Element outliner disabled', 'info');
+  } else {
+    // Add outlines to all elements
+    const elements = document.querySelectorAll('body *');
+    elements.forEach(el => {
+      if (!el.id || !el.id.startsWith('csae-')) {
+        el.style.outline = '1px solid rgba(255, 0, 0, 0.3)';
+        el.classList.add('csae-outlined');
+      }
+    });
+    window.csaeToolkit.outlinerActive = true;
+    showNotification('All elements outlined. Click again to disable.', 'info');
+  }
+}
+
+// ===================================
+// ELEMENT HIGHLIGHTER
+// ===================================
+function handleElementHighlighter() {
+  showNotification('Click on any element to highlight it permanently', 'info');
+
+  const highlightHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = e.target;
+
+    if (target.style.outline && target.style.outline.includes('5px solid yellow')) {
+      // Remove highlight
+      target.style.outline = '';
+      showNotification('Highlight removed', 'info');
+    } else {
+      // Add highlight
+      target.style.outline = '5px solid yellow';
+      target.style.outlineOffset = '2px';
+      showNotification('Element highlighted! Click again to remove.', 'success');
+    }
+
+    document.removeEventListener('click', highlightHandler);
+  };
+
+  document.addEventListener('click', highlightHandler, { once: true });
+}
+
+// ===================================
+// PERFORMANCE METRICS
+// ===================================
+function handlePerformanceMetrics() {
+  const perfData = performance.getEntriesByType('navigation')[0];
+  const paintData = performance.getEntriesByType('paint');
+
+  const metrics = {
+    'DNS Lookup': perfData ? `${Math.round(perfData.domainLookupEnd - perfData.domainLookupStart)}ms` : 'N/A',
+    'TCP Connection': perfData ? `${Math.round(perfData.connectEnd - perfData.connectStart)}ms` : 'N/A',
+    'Request Time': perfData ? `${Math.round(perfData.responseStart - perfData.requestStart)}ms` : 'N/A',
+    'Response Time': perfData ? `${Math.round(perfData.responseEnd - perfData.responseStart)}ms` : 'N/A',
+    'DOM Processing': perfData ? `${Math.round(perfData.domComplete - perfData.domLoading)}ms` : 'N/A',
+    'Load Complete': perfData ? `${Math.round(perfData.loadEventEnd - perfData.fetchStart)}ms` : 'N/A',
+    'First Paint': paintData.find(p => p.name === 'first-paint') ? `${Math.round(paintData.find(p => p.name === 'first-paint').startTime)}ms` : 'N/A',
+    'First Contentful Paint': paintData.find(p => p.name === 'first-contentful-paint') ? `${Math.round(paintData.find(p => p.name === 'first-contentful-paint').startTime)}ms` : 'N/A',
+  };
+
+  const resourceCount = performance.getEntriesByType('resource').length;
+  const totalSize = performance.getEntriesByType('resource').reduce((sum, r) => sum + (r.transferSize || 0), 0);
+
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #282A33;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    z-index: 1000000;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  `;
+
+  modal.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="color: #4ADC71; margin: 0;">Performance Metrics</h2>
+      <button id="close-perf-modal" style="background: #649ef5; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
+    </div>
+    <div style="font-size: 14px;">
+      ${Object.entries(metrics).map(([key, value]) => `
+        <div style="margin-bottom: 12px; padding: 10px; background: #353945; border-radius: 4px;">
+          <strong style="color: #4ADC71;">${escapeHTML(key)}:</strong><br>
+          <span style="font-size: 16px; font-weight: bold;">${escapeHTML(value)}</span>
+        </div>
+      `).join('')}
+      <div style="margin-top: 20px; padding: 10px; background: #353945; border-radius: 4px;">
+        <strong style="color: #4ADC71;">Resources Loaded:</strong> ${resourceCount}<br>
+        <strong style="color: #4ADC71;">Total Transfer Size:</strong> ${Math.round(totalSize / 1024)} KB
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  document.getElementById('close-perf-modal').onclick = () => modal.remove();
+}
+
+// ===================================
+// RESPONSIVE TESTER
+// ===================================
+function handleResponsiveTester() {
+  const presets = [
+    { name: 'iPhone SE', width: 375, height: 667 },
+    { name: 'iPhone 12 Pro', width: 390, height: 844 },
+    { name: 'iPad Air', width: 820, height: 1180 },
+    { name: 'iPad Pro', width: 1024, height: 1366 },
+    { name: 'Desktop HD', width: 1920, height: 1080 },
+    { name: 'Desktop 4K', width: 2560, height: 1440 },
+  ];
+
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #282A33;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    z-index: 1000000;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  `;
+
+  modal.innerHTML = `
+    <h2 style="color: #4ADC71; margin-bottom: 20px;">Responsive Tester</h2>
+    <p style="font-size: 12px; color: #888; margin-bottom: 15px;">Current window size: ${window.innerWidth} × ${window.innerHeight}px</p>
+    <div style="display: grid; gap: 10px;">
+      ${presets.map(preset => `
+        <button
+          class="resize-window"
+          data-width="${preset.width}"
+          data-height="${preset.height}"
+          style="padding: 12px; background: #353945; color: white; border: 1px solid #464b54; border-radius: 4px; cursor: pointer; text-align: left; transition: all 0.2s;"
+          onmouseover="this.style.background='#464b54'"
+          onmouseout="this.style.background='#353945'"
+        >
+          <div style="font-weight: bold; margin-bottom: 4px;">${escapeHTML(preset.name)}</div>
+          <div style="font-size: 11px; color: #888;">${preset.width} × ${preset.height}px</div>
+        </button>
+      `).join('')}
+    </div>
+    <button id="close-responsive" style="width: 100%; margin-top: 15px; padding: 10px; background: #649ef5; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+    <p style="font-size: 11px; color: #888; margin-top: 10px;">Note: Window resizing works best in popup windows. Some browsers may restrict resizing.</p>
+  `;
+
+  document.body.appendChild(modal);
+
+  modal.querySelectorAll('.resize-window').forEach(btn => {
+    btn.onclick = () => {
+      const width = parseInt(btn.getAttribute('data-width'));
+      const height = parseInt(btn.getAttribute('data-height'));
+      window.resizeTo(width, height);
+      showNotification(`Window resized to ${width} × ${height}px`, 'success');
+    };
+  });
+
+  document.getElementById('close-responsive').onclick = () => modal.remove();
+}
+
+// ===================================
+// UTILITY FUNCTIONS
+// ===================================
+function toCamelCase(str) {
+  return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+}
+
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ===================================
+// KEYBOARD SHORTCUTS
+// ===================================
+document.addEventListener('keydown', function(event) {
+  // Ctrl/Cmd + Shift + shortcuts
+  if ((event.ctrlKey || event.metaKey) && event.shiftKey) {
+    switch(event.key.toLowerCase()) {
+      case 's':
+        event.preventDefault();
+        handleScreenshot();
+        break;
+      case 'c':
+        event.preventDefault();
+        handleToggleHover({ hoverActive: true });
+        break;
+      case 'p':
+        event.preventDefault();
+        handleColorPicker();
+        break;
+      case 'g':
+        event.preventDefault();
+        handleToggleGrid();
+        break;
+      case 'o':
+        event.preventDefault();
+        handleElementOutliner();
+        break;
+      case 'e':
+        event.preventDefault();
+        handleLiveCSSEditor();
+        break;
+    }
+  }
+});
+
+console.log('CSAE Toolkit v3.0 Content Script Loaded - All Features Active');
+console.log('Keyboard Shortcuts: Ctrl+Shift+C (CSS Selector), Ctrl+Shift+P (Color Picker), Ctrl+Shift+G (Grid), Ctrl+Shift+O (Outliner), Ctrl+Shift+E (CSS Editor), Ctrl+Shift+S (Screenshot)');
