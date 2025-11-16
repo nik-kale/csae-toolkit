@@ -160,6 +160,43 @@ const App = () => {
     });
   }, [showNotification]);
 
+  const activateContentTool = useCallback((toolName) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (!tabs || tabs.length === 0) {
+        showNotification('error', 'No active tab found');
+        return;
+      }
+
+      // Inject advanced tools scripts
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: tabs[0].id },
+          files: ['content.js'],
+        },
+        () => {
+          if (chrome.runtime.lastError) {
+            showNotification('error', chrome.runtime.lastError.message);
+            return;
+          }
+
+          // Send message to activate the specific tool
+          chrome.tabs.sendMessage(
+            tabs[0].id,
+            { action: 'activateAdvancedTool', tool: toolName },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                console.error(chrome.runtime.lastError.message);
+                showNotification('error', 'Failed to activate tool');
+              } else if (response && response.status === 'success') {
+                showNotification('success', `${toolName} activated`);
+              }
+            }
+          );
+        }
+      );
+    });
+  }, [showNotification]);
+
   return (
     <div
       className={`App p-4 ${isDark ? 'bg-[#23282e]' : 'bg-gray-100'} ${isDark ? 'text-white' : 'text-gray-900'} shadow-lg w-full h-screen`}
@@ -248,6 +285,77 @@ const App = () => {
           >
             {showGuide ? 'Hide User Guide' : 'Explore User Guide'}
           </button>
+
+          {/* Advanced Developer Tools Section */}
+          <div className="w-full border-t border-gray-600 my-4 pt-4">
+            <h3 className="text-lg font-bold mb-3 text-center">🛠️ Advanced Dev Tools</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                className="btn-secondary text-xs py-2"
+                onClick={() => activateContentTool('liveCSSEditor')}
+                aria-label="Live CSS Editor"
+                title="Edit CSS in real-time"
+              >
+                CSS Editor
+              </button>
+              <button
+                className="btn-secondary text-xs py-2"
+                onClick={() => activateContentTool('pageRuler')}
+                aria-label="Page Ruler"
+                title="Measure elements"
+              >
+                Page Ruler
+              </button>
+              <button
+                className="btn-secondary text-xs py-2"
+                onClick={() => activateContentTool('elementOutliner')}
+                aria-label="Element Outliner"
+                title="Show element outlines"
+              >
+                Outliner
+              </button>
+              <button
+                className="btn-secondary text-xs py-2"
+                onClick={() => activateContentTool('imageExtractor')}
+                aria-label="Image Extractor"
+                title="Extract page images"
+              >
+                Images
+              </button>
+              <button
+                className="btn-secondary text-xs py-2"
+                onClick={() => activateContentTool('screenshotTool')}
+                aria-label="Screenshot Tool"
+                title="Capture screenshots"
+              >
+                Screenshot
+              </button>
+              <button
+                className="btn-secondary text-xs py-2"
+                onClick={() => activateContentTool('seoInspector')}
+                aria-label="SEO Inspector"
+                title="Analyze SEO meta tags"
+              >
+                SEO Check
+              </button>
+              <button
+                className="btn-secondary text-xs py-2"
+                onClick={() => activateContentTool('performanceAnalyzer')}
+                aria-label="Performance Analyzer"
+                title="Analyze page performance"
+              >
+                Performance
+              </button>
+              <button
+                className="btn-secondary text-xs py-2"
+                onClick={() => showNotification('info', 'More tools coming soon!')}
+                aria-label="More Tools"
+                title="Additional tools"
+              >
+                More...
+              </button>
+            </div>
+          </div>
         </div>
 
         {showGuide && <UserGuide />}

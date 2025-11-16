@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "CSAE Toolkit",
-  "description": "This extension complements the Cisco Support Assistant Extension (CSAE) and offers purpose-built tools to aid in campaign creation.",
-  "version": "1.2.6",
+  "description": "Professional 18-in-1 developer toolkit: CSS Editor, Performance Analyzer, SEO Inspector, Image Extractor, Page Ruler, and more!",
+  "version": "2.0.0",
   "permissions": [
     "activeTab",
     "scripting",

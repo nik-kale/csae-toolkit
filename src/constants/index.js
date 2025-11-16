@@ -66,7 +66,7 @@ export const SHORTCUTS = {
 // Extension Info
 export const EXTENSION_INFO = {
   name: 'CSAE Toolkit',
-  version: '1.2.6',
+  version: '2.0.0',
   author: 'Nik Kale',
   copyright: '© 2024-2025 Cisco Systems Inc.',
 };
