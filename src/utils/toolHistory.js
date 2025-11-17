@@ -218,6 +218,13 @@ export const ALL_TOOLS = [
   { id: 'storage-manager', name: 'Storage Manager', category: 'storage', icon: '💾' },
   { id: 'indexeddb-manager', name: 'IndexedDB & Cache Manager', category: 'storage', icon: '🗄️' },
   { id: 'view-config', name: 'View CSAE Config', category: 'storage', icon: '⚙️' },
+
+  // v5.0 Developer Productivity Tools
+  { id: 'accessibility-auditor', name: 'Accessibility Audit Tool', category: 'developer', icon: '♿' },
+  { id: 'network-viewer', name: 'Network Request Viewer', category: 'developer', icon: '📡' },
+  { id: 'snippet-manager', name: 'Code Snippet Manager', category: 'developer', icon: '📝' },
+  { id: 'tech-stack-detector', name: 'Technology Stack Detector', category: 'developer', icon: '🔍' },
+  { id: 'json-formatter', name: 'JSON/XML Formatter', category: 'developer', icon: '📋' },
 ];
 
 /**

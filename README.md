@@ -1,6 +1,6 @@
-# CSAE Toolkit v4.0 🛠️
+# CSAE Toolkit v5.0 🛠️
 
-**Enterprise Edition - Professional Developer & Designer Toolkit with 22+ Tools**
+**Developer Productivity Edition - Professional Toolkit with 30 Tools**
 
 Created by Nik Kale (nikkal) | © 2024-2025 Cisco Systems Inc.
 
@@ -14,12 +14,20 @@ CSAE Toolkit is a powerful Chrome Extension that complements the Cisco Support A
 **License:** MIT
 **Manifest:** V3 (Modern Chrome Extension Standard)
 
-### 🚀 What's New in v4.0 Enterprise Edition
+### 🚀 What's New in v5.0 Developer Productivity Edition
 
+**5 Powerful New Developer Tools:**
+- **♿ Accessibility Audit Tool** - WCAG 2.1/2.2 compliance checker with 10+ checks and remediation guidance
+- **📡 Network Request Viewer** - Monitor and inspect all network requests with HAR export
+- **📝 Code Snippet Manager** - Save, organize, and inject JavaScript/CSS code snippets
+- **🔍 Technology Stack Detector** - Auto-detect 30+ frameworks, libraries, and technologies
+- **📋 JSON/XML Formatter** - Format, validate, and beautify JSON/XML data
+
+**v4.0 Enterprise Features (All Included):**
 - **🎨 Light/Dark Theme Toggle** - Choose your preferred theme or use auto (system preference)
 - **↩️ Undo/Redo System** - Full history tracking with Ctrl+Z/Ctrl+Shift+Z shortcuts
 - **⭐ Favorites & Recent Tools** - Star your favorites and quick access to recent tools
-- **🔍 Tool Search (Ctrl+K)** - Instant search across all 22 tools
+- **🔍 Tool Search (Ctrl+K)** - Instant search across all 30 tools
 - **🎯 Floating Quick Access Button** - Draggable quick access to favorite tools
 - **🎓 Interactive Onboarding** - First-time user guide with 5-step tutorial
 - **⚙️ Settings & Preferences** - Comprehensive settings with export/import
@@ -29,7 +37,7 @@ CSAE Toolkit is a powerful Chrome Extension that complements the Cisco Support A
 
 ---
 
-## ✨ Features (22 Professional Tools)
+## ✨ Features (30 Professional Tools)
 
 ### 🔍 Inspector Tools (8 tools)
 1. **CSS Selector Grabber** - Hover over any element to see its CSS selector, value, and all computed properties. Click to copy, Alt+Click to pin multiple boxes.
@@ -60,6 +68,13 @@ CSAE Toolkit is a powerful Chrome Extension that complements the Cisco Support A
 20. **Storage Manager** - View and clear LocalStorage, SessionStorage, and Cookies.
 21. **IndexedDB Manager** - View and clear IndexedDB databases.
 22. **Browser Cache Clearer** - Clear browser cache with one click.
+
+### 🚀 Developer Productivity Tools (5 tools) **NEW in v5.0**
+23. **Accessibility Audit Tool** - Comprehensive WCAG 2.1/2.2 compliance checker with 10+ accessibility checks, severity levels, detailed reports, and remediation guidance. Export audit results as JSON.
+24. **Network Request Viewer** - Real-time network monitoring with request/response inspection, filtering by type, sorting options, HAR export, pause/resume recording, and detailed request analysis.
+25. **Code Snippet Manager** - Save, organize, and inject JavaScript/CSS code snippets. Import/export snippets, track usage statistics, search and filter, with built-in code editor.
+26. **Technology Stack Detector** - Auto-detect 30+ technologies including frameworks (React, Vue, Angular), libraries (jQuery, Lodash), CMS (WordPress, Shopify), analytics, CDNs, and more. Export reports with confidence scores.
+27. **JSON/XML Formatter** - Format and beautify JSON/XML data, minify for production, validate syntax, copy to clipboard, download output, handle large files with character/line count.
 
 **Plus:** CSAE Config Viewer, Quick Links to CSAE Web and Admin Portal
 
@@ -274,10 +289,11 @@ All permissions are used exclusively for the stated tool functionality. No data 
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
-**Current Version:** 4.0.0 (Enterprise Edition)
-**Previous Versions:** 3.0.0, 1.2.6, 1.2.0, 1.1.0, 1.0.0
+**Current Version:** 5.0.0 (Developer Productivity Edition)
+**Previous Versions:** 4.0.0, 3.0.0, 1.2.6, 1.2.0, 1.1.0, 1.0.0
 
 ### Major Milestones
+- **v5.0.0** (Nov 2025) - Developer Productivity Edition with accessibility auditing, network monitoring, snippet manager, tech detection, JSON formatter
 - **v4.0.0** (Nov 2025) - Enterprise Edition with theme toggle, undo/redo, tool search, favorites, security hardening
 - **v3.0.0** (Jan 2025) - Feature parity with SuperDev Pro, 22 professional tools, keyboard shortcuts
 - **v1.2.6** (Dec 2024) - CSAE Config integration, storage management

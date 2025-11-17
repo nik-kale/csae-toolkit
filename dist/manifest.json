@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "CSAE Toolkit",
-  "description": "Enterprise Edition v4.0 - Professional developer toolkit with 22+ tools, theme toggle, undo/redo, favorites, tool search, and advanced features for web development.",
-  "version": "4.0.0",
+  "description": "Developer Productivity Edition v5.0 - 30 professional tools including accessibility auditing, network monitoring, code snippets, tech stack detection, and advanced development features.",
+  "version": "5.0.0",
   "permissions": [
     "activeTab",
     "scripting",

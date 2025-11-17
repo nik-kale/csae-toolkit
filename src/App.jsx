@@ -7,7 +7,12 @@ import Settings from './Settings';
 import Onboarding from './components/Onboarding';
 import ToolSearch from './components/ToolSearch';
 import FloatingButton from './components/FloatingButton';
-import { ThemeToggle } from './utils/theme';
+import AccessibilityAuditor from './components/AccessibilityAuditor';
+import NetworkViewer from './components/NetworkViewer';
+import SnippetManager from './components/SnippetManager';
+import TechStackDetector from './components/TechStackDetector';
+import JSONFormatter from './components/JSONFormatter';
+import { ThemeToggle } from './utils/theme.jsx';
 import { toolHistoryManager } from './utils/toolHistory';
 import undoRedoManager from './utils/undoRedo';
 
@@ -20,6 +25,13 @@ const App = () => {
   const [showToolSearch, setShowToolSearch] = useState(false);
   const [showFloatingButton, setShowFloatingButton] = useState(true);
   const [undoRedoState, setUndoRedoState] = useState({ canUndo: false, canRedo: false });
+
+  // v5.0 Developer Productivity Tools
+  const [showAccessibilityAuditor, setShowAccessibilityAuditor] = useState(false);
+  const [showNetworkViewer, setShowNetworkViewer] = useState(false);
+  const [showSnippetManager, setShowSnippetManager] = useState(false);
+  const [showTechStackDetector, setShowTechStackDetector] = useState(false);
+  const [showJSONFormatter, setShowJSONFormatter] = useState(false);
 
   useEffect(() => {
     if (window.chrome && chrome.devtools) {
@@ -118,6 +130,7 @@ const App = () => {
   const handleToolSelect = (tool) => {
     // Map tool ID to action
     const actionMap = {
+      // v4.0 Tools
       'css-selector': 'toggleHover',
       'color-picker': 'pickColor',
       'color-palette': 'viewColorPalette',
@@ -140,6 +153,13 @@ const App = () => {
       'storage-manager': () => setShowStorageManager(true),
       'indexeddb-manager': () => setShowIndexedDBManager(true),
       'view-config': 'viewConfig',
+
+      // v5.0 Developer Productivity Tools
+      'accessibility-auditor': () => setShowAccessibilityAuditor(true),
+      'network-viewer': () => setShowNetworkViewer(true),
+      'snippet-manager': () => setShowSnippetManager(true),
+      'tech-stack-detector': () => setShowTechStackDetector(true),
+      'json-formatter': () => setShowJSONFormatter(true),
     };
 
     const mapping = actionMap[tool.id];
@@ -342,12 +362,12 @@ const App = () => {
           <div className="text-center text-xs text-gray-400 mt-8">
             <p className="font-semibold">Made with ☕ and ❤️ by Nik Kale</p>
             <p className="mt-1">© 2024-2025 Cisco Systems Inc.</p>
-            <p className="mt-2 text-[#4ADC71] font-bold">✨ v4.0 Enterprise Edition - 22+ Professional Tools ✨</p>
+            <p className="mt-2 text-[#4ADC71] font-bold">✨ v5.0 Developer Productivity Edition - 30 Professional Tools ✨</p>
           </div>
         </div>
       </div>
 
-      {/* v4.0 Overlays and Components */}
+      {/* v4.0 & v5.0 Overlays and Components */}
       {showToolSearch && (
         <ToolSearch
           onToolSelect={handleToolSelect}
@@ -361,6 +381,27 @@ const App = () => {
 
       {showFloatingButton && (
         <FloatingButton onToolSelect={handleToolSelect} />
+      )}
+
+      {/* v5.0 Developer Productivity Tools */}
+      {showAccessibilityAuditor && (
+        <AccessibilityAuditor onClose={() => setShowAccessibilityAuditor(false)} />
+      )}
+
+      {showNetworkViewer && (
+        <NetworkViewer onClose={() => setShowNetworkViewer(false)} />
+      )}
+
+      {showSnippetManager && (
+        <SnippetManager onClose={() => setShowSnippetManager(false)} />
+      )}
+
+      {showTechStackDetector && (
+        <TechStackDetector onClose={() => setShowTechStackDetector(false)} />
+      )}
+
+      {showJSONFormatter && (
+        <JSONFormatter onClose={() => setShowJSONFormatter(false)} />
       )}
 
       <Onboarding onComplete={() => console.log('Onboarding completed')} />

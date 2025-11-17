@@ -2,7 +2,7 @@
   "name": "csae-toolkit",
   "author": "Nik Kale",
   "private": true,
-  "version": "4.0.0",
+  "version": "5.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
