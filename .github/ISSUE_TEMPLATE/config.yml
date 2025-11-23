@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ask a Question
+    url: https://github.com/nik-kale/csae-toolkit/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: CSAE Documentation
+    url: https://supportassistant.cisco.com/extension
+    about: Visit the official CSAE documentation

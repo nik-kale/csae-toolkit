@@ -1,5 +1,15 @@
+# Dependencies
+node_modules/
+bower_components/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+*.zip
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,17 +17,76 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist-ssr
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory
+coverage/
+*.lcov
+.nyc_output
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 *.local
+
+# Cache directories
+.cache/
+.parcel-cache/
+.npm/
+.eslintcache
+.node_repl_history
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn
+.yarn-integrity
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+!.vscode/settings.json
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*~
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Chrome Extension specific
+*.pem
+*.crx
+web-ext-artifacts/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Debug files
+debug.log
