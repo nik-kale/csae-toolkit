@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-08-02
+
+### Fixed
+
+- `icon16.png`, `icon48.png`, and `icon128.png` were all the same 1024x1024
+  image, so Chrome downscaled them at runtime and the packaged extension
+  carried roughly 3 MB of unused pixels. Each is now stored at the size the
+  manifest declares, cutting the package from 5.6 MB to under 3 MB.
+- `scripts/sync-version.js` rewrote `public/manifest.json` with `JSON.stringify`,
+  which reformatted the file and left it failing `format:check` after every
+  version bump. It now patches the version string in place.
+
 ## [2.0.0] - 2026-08-02
 
 Major release. The extension no longer runs on every page: the always-on
@@ -105,6 +117,7 @@ permission set on update.
 
 ---
 
-[Unreleased]: https://github.com/nik-kale/csae-toolkit/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/nik-kale/csae-toolkit/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/nik-kale/csae-toolkit/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/nik-kale/csae-toolkit/compare/v1.2.6...v2.0.0
 [1.2.6]: https://github.com/nik-kale/csae-toolkit/releases/tag/v1.2.6
