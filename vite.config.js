@@ -8,8 +8,7 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         { src: 'src/devtools.js', dest: '' },
-        { src: 'src/panel.js', dest: '' },
-        { src: 'public/styles.css', dest: '' }
+        { src: 'src/panel.js', dest: '' }
       ]
     })
   ],
