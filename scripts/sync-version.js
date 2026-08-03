@@ -14,7 +14,9 @@ const readmePath = path.join(root, 'README.md');
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
 const version = pkg.version;
 
-const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+const manifestRaw = readFileSync(manifestPath, 'utf8');
+const manifest = JSON.parse(manifestRaw);
+const manifestVersionRe = /^(\s*"version"\s*:\s*")[^"]*(")/m;
 const readme = readFileSync(readmePath, 'utf8');
 const badgeRe = /(version-)(\d+\.\d+\.\d+)(-blue)/;
 const badgeMatch = readme.match(badgeRe);
@@ -22,8 +24,14 @@ const readmeVersion = badgeMatch ? badgeMatch[2] : null;
 
 if (write) {
   if (manifest.version !== version) {
-    manifest.version = version;
-    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+    // Patch the version string in place rather than re-serializing. JSON.stringify
+    // always breaks arrays one-per-line, which Prettier then collapses, so a
+    // round-trip here would leave the file failing `format:check` in CI.
+    if (!manifestVersionRe.test(manifestRaw)) {
+      console.error('Could not locate a "version" field in public/manifest.json.');
+      process.exit(1);
+    }
+    writeFileSync(manifestPath, manifestRaw.replace(manifestVersionRe, `$1${version}$2`));
   }
   if (badgeMatch && readmeVersion !== version) {
     writeFileSync(readmePath, readme.replace(badgeRe, `$1${version}$3`));
