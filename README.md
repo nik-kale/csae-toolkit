@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-yellow.svg?logo=google-chrome&logoColor=white)
 ![React](https://img.shields.io/badge/React-18.3.1-61DAFB.svg?logo=react&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-5.2.0-646CFF.svg?logo=vite&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6.4.3-646CFF.svg?logo=vite&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.4-38B2AC.svg?logo=tailwind-css&logoColor=white)
 
 **A powerful Chrome Extension toolkit that complements the Cisco Support Assistant Extension (CSAE) with purpose-built tools to aid in campaign creation and management.**
@@ -26,6 +26,7 @@
   - [From Source](#from-source)
   - [For Development](#for-development)
 - [Usage](#usage)
+- [Permissions & Shortcuts](#-permissions--shortcuts)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Development](#development)
@@ -49,26 +50,37 @@ This toolkit streamlines campaign creation and makes working with CSAE more effi
 ## ✨ Features
 
 ### 🎨 **CSS Selector Grabber**
-Easily capture CSS selectors from any element on a webpage by hovering over it. Perfect for campaign creation and web automation tasks.
+
+Hover over any element to capture a robust, uniqueness-validated CSS selector. The engine prefers stable attributes (`data-testid`, `data-qa`, `id`, `name`, `aria-label`, `role`), escapes tricky identifiers with `CSS.escape`, filters framework-hashed classes, and works across shadow DOM and iframes. Each hover shows a **live match count**, click to copy the selector, or **Shift + Click** to copy the element's **XPath**. Every capture is saved to a persisted **selector history** so a mis-click never loses your previous copy.
 
 ### ⚙️ **CSAE Config Viewer**
-View and inspect CSAE configuration in a clean, readable format directly from the extension.
 
-### 🎨 **Color Picker Tool**
-Built-in color picker utility to help you select and copy color values from any webpage element.
+Locates the CSAE configuration the page actually stores (window globals plus local/session storage) and renders it in a **collapsible JSON viewer** with **search** and one-click **Copy JSON**.
+
+### 🎨 **Color Tools**
+
+Sample any pixel on screen with the eyedropper, then copy the value as **HEX, RGB, or HSL**. Colors accumulate in a reusable **palette history**, and a built-in **WCAG contrast checker** reports the contrast ratio with AA/AAA pass/fail for normal and large text.
 
 ### 💾 **Storage Manager**
-Manage Chrome extension storage with an intuitive interface. View, edit, and clear stored data effortlessly.
+
+Inspect and manage the active tab's `localStorage` and `sessionStorage`: **per-key edit and delete**, **add/overwrite** keys, **search/filter**, and **JSON export**. Cookies are **scoped to the active tab's domain** — load them, delete individual cookies, or clear the site's cookies (with a confirmation prompt) without touching the rest of your cookie jar.
+
+### ⌨️ **Keyboard Shortcuts**
+
+Trigger the core tools without opening the panel (see [Permissions & Shortcuts](#-permissions--shortcuts)).
 
 ### 📚 **Integrated User Guide**
+
 Comprehensive user guide built right into the extension to help you get started quickly.
 
 ### 🚀 **Quick Navigation**
+
 - Direct link to CSAE Web Portal
 - Quick access to CSAE Admin Portal
 - Seamless integration with existing CSAE workflows
 
 ### 🎨 **Modern UI/UX**
+
 - Clean, dark-themed interface
 - Responsive design with TailwindCSS
 - Smooth transitions and hover effects
@@ -87,17 +99,20 @@ Comprehensive user guide built right into the extension to help you get started 
 ### From Source
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/nik-kale/csae-toolkit.git
    cd csae-toolkit
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Build the extension**
+
    ```bash
    npm run build
    ```
@@ -111,6 +126,7 @@ Comprehensive user guide built right into the extension to help you get started 
 ### For Development
 
 1. **Start development server**
+
    ```bash
    npm run dev
    ```
@@ -131,34 +147,70 @@ Comprehensive user guide built right into the extension to help you get started 
 ### Using the Tools
 
 **CSS Selector Grabber:**
+
 1. Click "Grab CSS Selector"
-2. Hover over any element on the webpage
-3. Click to copy the CSS selector to clipboard
+2. Hover over any element to see its selector, XPath, value, and a live match count
+3. Click to copy the CSS selector, or Shift + Click to copy the XPath
+4. Alt + Click to pin a hover box; press ESC to exit
+5. Open "Show Selector History" to re-copy any recent capture
 
 **CSAE Config Viewer:**
-1. Navigate to a page with CSAE config
-2. Click "View CSAE Config"
-3. Configuration will be displayed in a modal
 
-**Color Picker:**
+1. Open the page where CSAE stores its config
+2. Click "View CSAE Config"
+3. Browse the collapsible JSON, filter with the search box, and click "Copy JSON"
+
+**Color Tools:**
+
 1. Click "Utilize Color Picker"
-2. Click on any element to pick its color
-3. Color value will be copied to clipboard
+2. Click "Pick a Color" and sample any pixel on screen
+3. Copy the value as HEX, RGB, or HSL and reuse colors from the palette history
+4. Use the contrast checker to validate foreground/background pairs against WCAG AA/AAA
 
 **Storage Manager:**
+
 1. Click "Show Storage Manager"
-2. View, edit, or clear extension storage data
+2. Choose Local or Session, then Load Storage Data
+3. Edit or delete individual keys, add new keys, filter, or export as JSON
+4. Load Cookies (scoped to the active tab), delete individual cookies, or clear the site's cookies
+
+---
+
+## 🔐 Permissions & Shortcuts
+
+The extension requests the minimum permissions its features need:
+
+| Permission                | Why it is needed                                                                                    |
+| ------------------------- | --------------------------------------------------------------------------------------------------- |
+| `activeTab` + `scripting` | Inject the content script on demand (only when you click a tool), instead of running on every page. |
+| `host_permissions: *`     | So the selector grabber and config viewer can reach any site you explicitly run them on.            |
+| `cookies`                 | Read and delete cookies **scoped to the active tab's domain** via the service worker.               |
+| `storage`                 | Persist selector history and the color palette in `chrome.storage.local`.                           |
+| `clipboardWrite`          | Copy selectors, XPath, config, and color values to your clipboard.                                  |
+| `sidePanel`               | Host the toolkit UI in Chrome's side panel.                                                         |
+
+**Security model:** the content script is injected on demand rather than declared for `<all_urls>`, all page-derived data is rendered with `createElement`/`textContent` (never `innerHTML`), and the cookie service worker rejects messages that don't originate from the extension's own pages and scopes every cookie operation to the active tab's origin.
+
+**Keyboard shortcuts** (editable at `chrome://extensions/shortcuts`):
+
+| Command         | Default (Win/Linux) | Default (macOS)   | Action                         |
+| --------------- | ------------------- | ----------------- | ------------------------------ |
+| `grab-selector` | `Ctrl+Shift+S`      | `Command+Shift+S` | Toggle the selector hover tool |
+| `pick-color`    | `Ctrl+Shift+K`      | `Command+Shift+K` | Open the eyedropper            |
+| `view-config`   | _unassigned_        | _unassigned_      | Open the CSAE config viewer    |
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Framework:** React 18.3.1
-- **Build Tool:** Vite 5.2.0
-- **Styling:** TailwindCSS 3.4.4
+- **Framework:** React 18.3.1 (`createRoot` with an error boundary)
+- **Build Tool:** Vite 6.4.3
+- **Styling:** TailwindCSS 3.4.4 (system font stack, no remote fonts)
 - **Language:** JavaScript (ESNext)
 - **Extension:** Chrome Extension Manifest V3
-- **Linting:** ESLint with React plugins
+- **Linting/Formatting:** ESLint 9 (flat config) + Prettier
+- **Testing:** Vitest + Testing Library (mocked `chrome` global)
+- **CI:** GitHub Actions (lint, test, build, version check, `npm audit`)
 
 ---
 
@@ -166,25 +218,38 @@ Comprehensive user guide built right into the extension to help you get started 
 
 ```
 csae-toolkit/
-├── public/               # Static assets
-│   ├── manifest.json    # Chrome extension manifest
-│   ├── icon*.png        # Extension icons
-│   └── background.png   # UI assets
-├── src/                 # Source code
-│   ├── App.jsx         # Main application component
-│   ├── UserGuide.jsx   # User guide component
-│   ├── StorageManager.jsx  # Storage management component
-│   ├── DateTime.jsx    # Date/time display component
-│   ├── main.jsx        # Entry point
-│   ├── devtools.js     # DevTools integration
-│   ├── panel.js        # Panel logic
-│   └── assets/         # Component assets
-├── dist/               # Build output (generated)
-├── .eslintrc.cjs      # ESLint configuration
-├── vite.config.js     # Vite configuration
-├── tailwind.config.js # Tailwind configuration
-├── postcss.config.js  # PostCSS configuration
-└── package.json       # Project dependencies
+├── public/                  # Static assets copied verbatim into the build
+│   ├── manifest.json        # Chrome extension manifest (MV3)
+│   ├── background.js        # Service worker (cookie RPCs, keyboard commands)
+│   ├── content.js           # On-demand content script (selectors, config, color)
+│   ├── icon*.png            # Extension icons
+│   └── background.png       # UI banner
+├── src/                     # Side panel source
+│   ├── App.jsx              # Main application component
+│   ├── main.jsx            # Entry point (createRoot + ErrorBoundary)
+│   ├── ErrorBoundary.jsx    # Render-error fallback
+│   ├── Button.jsx           # Shared button component
+│   ├── UserGuide.jsx        # User guide component
+│   ├── StorageManager.jsx   # Storage + cookie manager
+│   ├── SelectorHistory.jsx  # Persisted selector history
+│   ├── ColorPicker.jsx      # Color tools (formats, palette, contrast)
+│   ├── DateTime.jsx         # Date/time display component
+│   ├── devtools.js          # DevTools page
+│   ├── panel.js             # DevTools storage panel logic
+│   └── lib/                 # Pure, unit-tested helpers
+│       ├── selector.js      # CSS selector + XPath engine
+│       ├── cookies.js       # Cookie URL/sender helpers
+│       └── color.js         # Color parsing, formatting, WCAG contrast
+├── test/                    # Vitest suites (selector, color, cookies, storage)
+├── scripts/                 # sync-version.js, package.js
+├── .github/workflows/ci.yml # CI pipeline
+├── eslint.config.js         # ESLint 9 flat config
+├── vite.config.js           # Vite configuration
+├── vitest.config.js         # Vitest configuration
+├── .prettierrc.json         # Prettier configuration
+├── tailwind.config.js       # Tailwind configuration
+├── postcss.config.js        # PostCSS configuration
+└── package.json             # Project metadata and scripts
 ```
 
 ---
@@ -193,8 +258,8 @@ csae-toolkit/
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- npm or yarn
+- Node.js (v20 or higher, matching CI)
+- npm
 - Google Chrome browser
 
 ### Setup Development Environment
@@ -215,7 +280,11 @@ npm run dev
 
 - `npm run dev` - Start development server with hot reload
 - `npm run build` - Build production-ready extension
-- `npm run lint` - Run ESLint to check code quality
+- `npm run lint` - Run ESLint (flat config) to check code quality
+- `npm run format` / `npm run format:check` - Apply / verify Prettier formatting
+- `npm test` / `npm run test:watch` - Run the Vitest suite
+- `npm run check-version` / `npm run sync-version` - Verify / fix version consistency across `package.json`, `manifest.json`, and the README badge
+- `npm run package` - Build and zip `dist/` for distribution
 - `npm run preview` - Preview production build
 
 ### Development Workflow

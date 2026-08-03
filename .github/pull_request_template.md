@@ -35,6 +35,7 @@ Please describe the tests that you ran to verify your changes:
 - [ ] Manual testing in Chrome
 
 **Test Configuration:**
+
 - Chrome Version:
 - OS:
 
@@ -63,5 +64,6 @@ Add any additional notes or context about the PR here.
 ## Related Issues
 
 List any related issues or PRs:
+
 - Related to #
 - Depends on #

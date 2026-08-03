@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const DateTime = () => {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -21,15 +21,13 @@ const DateTime = () => {
       minute: 'numeric',
       second: 'numeric',
       hour12: true,
-      timeZoneName: 'short'
+      timeZoneName: 'short',
     };
     return date.toLocaleDateString(undefined, options);
   };
 
   return (
-    <div className="text-center mt-8 text-sm font-semibold">
-      {formatDate(currentDateTime)}
-    </div>
+    <div className="text-center mt-8 text-sm font-semibold">{formatDate(currentDateTime)}</div>
   );
 };
 
