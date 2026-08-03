@@ -35,7 +35,7 @@ If applicable, add screenshots to help explain your problem.
 
 - **OS:** [e.g. Windows 10, macOS 12.0, Ubuntu 22.04]
 - **Chrome Version:** [e.g. 120.0.6099.109]
-- **Extension Version:** [e.g. 1.2.6]
+- **Extension Version:** [e.g. 2.0.0]
 
 ## Additional Context
 

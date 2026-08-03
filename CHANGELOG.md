@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-08-02
+
+Major release. The extension no longer runs on every page: the always-on
+`<all_urls>` content script is gone in favor of on-demand injection, cookie
+access is scoped to the active tab, and the legacy popup has been removed in
+favor of the side panel. Existing users will be prompted to accept the revised
+permission set on update.
+
 ### Security
 
 - Rebuilt the hover box, color notification, config viewer, and DevTools panel to
@@ -97,5 +105,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/nik-kale/csae-toolkit/compare/v1.2.6...HEAD
+[Unreleased]: https://github.com/nik-kale/csae-toolkit/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/nik-kale/csae-toolkit/compare/v1.2.6...v2.0.0
 [1.2.6]: https://github.com/nik-kale/csae-toolkit/releases/tag/v1.2.6
