@@ -3,17 +3,8 @@
   "name": "CSAE Toolkit",
   "description": "This extension complements the Cisco Support Assistant Extension (CSAE) and offers purpose-built tools to aid in campaign creation.",
   "version": "1.2.6",
-  "permissions": [
-    "activeTab",
-    "scripting",
-    "storage",
-    "cookies",
-    "clipboardWrite",
-    "sidePanel"
-  ],
-  "host_permissions": [
-    "*://*/*"
-  ],
+  "permissions": ["activeTab", "scripting", "storage", "cookies", "clipboardWrite", "sidePanel"],
+  "host_permissions": ["*://*/*"],
   "background": {
     "service_worker": "background.js"
   },
@@ -33,15 +24,17 @@
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content.js"
-      ],
-      "run_at": "document_end"
+  "commands": {
+    "grab-selector": {
+      "suggested_key": { "default": "Ctrl+Shift+S", "mac": "Command+Shift+S" },
+      "description": "Toggle the CSS selector hover tool on the active tab"
+    },
+    "pick-color": {
+      "suggested_key": { "default": "Ctrl+Shift+K", "mac": "Command+Shift+K" },
+      "description": "Open the eyedropper to pick a color"
+    },
+    "view-config": {
+      "description": "Open the CSAE config viewer on the active tab"
     }
-  ]
+  }
 }

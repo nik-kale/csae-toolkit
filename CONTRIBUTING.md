@@ -35,6 +35,7 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
+
 1. Go to '...'
 2. Click on '...'
 3. Scroll down to '...'
@@ -47,9 +48,10 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Environment:**
- - OS: [e.g. Windows 10, macOS 12.0]
- - Chrome Version: [e.g. 120.0.6099.109]
- - Extension Version: [e.g. 1.2.6]
+
+- OS: [e.g. Windows 10, macOS 12.0]
+- Chrome Version: [e.g. 120.0.6099.109]
+- Extension Version: [e.g. 1.2.6]
 
 **Additional context**
 Add any other context about the problem here.
@@ -78,18 +80,22 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 
 ```markdown
 ## Description
+
 Brief description of what this PR does
 
 ## Type of Change
+
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] Documentation update
 
 ## How Has This Been Tested?
+
 Describe the tests you ran to verify your changes.
 
 ## Checklist
+
 - [ ] My code follows the style guidelines of this project
 - [ ] I have performed a self-review of my code
 - [ ] I have commented my code, particularly in hard-to-understand areas
@@ -101,17 +107,20 @@ Describe the tests you ran to verify your changes.
 ## Development Setup
 
 1. **Clone your fork**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/csae-toolkit.git
    cd csae-toolkit
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Start development server**
+
    ```bash
    npm run dev
    ```
@@ -136,6 +145,7 @@ Describe the tests you ran to verify your changes.
 - Reference issues and pull requests liberally after the first line
 
 **Format:**
+
 ```
 <type>: <subject>
 
@@ -145,6 +155,7 @@ Describe the tests you ran to verify your changes.
 ```
 
 **Types:**
+
 - `feat`: A new feature
 - `fix`: A bug fix
 - `docs`: Documentation only changes
@@ -155,6 +166,7 @@ Describe the tests you ran to verify your changes.
 - `chore`: Changes to the build process or auxiliary tools
 
 **Example:**
+
 ```
 feat: add keyboard shortcuts for CSS selector tool
 
@@ -175,6 +187,7 @@ Closes #123
 - Prefer **arrow functions** for callbacks
 
 **Example:**
+
 ```javascript
 // Good
 const handleColorPicker = () => {
@@ -190,11 +203,11 @@ const handleColorPicker = () => {
 
 // Avoid
 function handleColorPicker() {
-  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    if(tabs.length > 0) {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    if (tabs.length > 0) {
       chrome.scripting.executeScript({
-        target: {tabId: tabs[0].id},
-        files: ['content.js']
+        target: { tabId: tabs[0].id },
+        files: ['content.js'],
       });
     }
   });
@@ -211,6 +224,7 @@ function handleColorPicker() {
 - Follow **React Hooks rules**
 
 **Example:**
+
 ```javascript
 // Good
 const StorageManager = () => {
@@ -256,6 +270,7 @@ Before submitting a PR:
    - Test on different screen sizes if UI changes were made
 
 2. **Linting**
+
    ```bash
    npm run lint
    ```
@@ -269,6 +284,7 @@ Before submitting a PR:
 ## Questions?
 
 Don't hesitate to ask questions by:
+
 - Opening an issue with the `question` label
 - Reaching out to the maintainers
 

@@ -99,6 +99,7 @@ These permissions are necessary for the extension's functionality. We do not col
 ### Content Security Policy
 
 The extension implements a strict Content Security Policy to prevent XSS attacks:
+
 ```
 script-src 'self'; object-src 'self'
 ```
@@ -106,6 +107,7 @@ script-src 'self'; object-src 'self'
 ## Third-Party Dependencies
 
 We regularly audit our dependencies for known vulnerabilities using:
+
 - npm audit
 - Dependabot alerts (when available)
 
